@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beer Tree Challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--fg:#ecebe6;--mut:#a3a6ad;--gold:#ffd166}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--fg);
+  background:radial-gradient(circle at 50% 45%,#34373d,#25272b 60%,#1e2024);
+  font-family:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif}
+#stage{position:fixed;inset:0;cursor:grab;touch-action:none}
+#stage.drag{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0}
+#links{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
+#links line{stroke-width:2.5;stroke-linecap:round;opacity:.4}
+
+.b{position:absolute;left:0;top:0;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  text-align:center;line-height:1.08;cursor:pointer;user-select:none;-webkit-user-select:none;color:#fff;padding:4px;
+  background:
+    radial-gradient(circle at 30% 26%,rgba(255,255,255,.38),rgba(255,255,255,0) 34%),
+    radial-gradient(circle at 50% 58%,color-mix(in srgb,var(--c) 10%,transparent),color-mix(in srgb,var(--c) 42%,transparent) 100%),
+    rgba(37,39,43,.78);
+  border:1.5px solid color-mix(in srgb,var(--c) 75%,#fff);
+  box-shadow:0 0 16px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 16px color-mix(in srgb,var(--c) 50%,transparent);
+  text-shadow:0 1px 4px rgba(0,0,0,.65);will-change:transform;transition:box-shadow .25s,filter .25s}
+.b:hover,.b.sel{filter:brightness(1.22);box-shadow:0 0 34px var(--c),inset 0 0 22px color-mix(in srgb,var(--c) 65%,transparent)}
+.b:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.b span{pointer-events:none}
+.b em{position:absolute;top:100%;margin-top:3px;font-style:normal;font-size:12px;color:var(--gold);text-shadow:0 1px 3px #000;white-space:nowrap;pointer-events:none}
+.b.tried{border-color:var(--gold);box-shadow:0 0 22px color-mix(in srgb,var(--gold) 55%,transparent),0 0 12px var(--c),inset 0 0 18px color-mix(in srgb,var(--c) 60%,transparent)}
+.b.tried::after{content:"✓";position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#2a2418;font-size:11px;font-weight:600;display:grid;place-items:center;text-shadow:none}
+
+#hud{position:fixed;left:16px;top:14px;width:min(300px,calc(100vw - 32px));pointer-events:none}
+#hud h1{margin:0 0 8px;font-size:22px;font-weight:600;letter-spacing:.2px}
+.bar{height:8px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,#ff9f43,var(--gold));transition:width .5s}
+#stat{margin-top:6px;font-size:14px;color:var(--mut)}
+#stat b{color:var(--fg);font-weight:500}
+#tools{position:fixed;left:16px;bottom:16px;display:flex;gap:8px;align-items:center}
+#tools button,#tb,#x{font:inherit;color:var(--fg);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:999px;cursor:pointer}
+#tools button{width:38px;height:38px;font-size:18px}
+#tools button:hover,#tb:hover,#x:hover{background:rgba(255,255,255,.16)}
+#tools .t{width:auto;padding:0 14px;font-size:13px;color:var(--mut)}
+#hint{position:fixed;right:16px;bottom:18px;font-size:13px;color:var(--mut);pointer-events:none}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+#panel{position:fixed;right:16px;top:16px;width:min(330px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;
+  padding:20px;border-radius:22px;background:rgba(40,42,47,.92);backdrop-filter:blur(8px);
+  border:1.5px solid var(--c,#888);box-shadow:0 0 30px color-mix(in srgb,var(--c,#888) 45%,transparent);
+  transform:translateX(calc(100% + 30px));transition:transform .35s cubic-bezier(.2,.9,.3,1)}
+#panel.on{transform:none}
+#x{position:absolute;right:12px;top:12px;width:32px;height:32px;font-size:18px}
+#pp{font-size:13px;color:var(--mut);margin-right:36px;min-height:16px}
+#pn{margin:4px 0 8px;font-size:28px;font-weight:600;color:var(--c)}
+#pd{margin:0 0 14px;line-height:1.45;color:#d9d8d3}
+.meta{display:grid;gap:4px;margin-bottom:16px;font-size:14px;color:var(--mut)}
+.meta b{color:var(--fg);font-weight:500}
+#stars{display:flex;gap:4px;margin-bottom:14px}
+#stars button{font-size:30px;line-height:1;padding:0;background:none;border:0;cursor:pointer;color:rgba(255,255,255,.22);transition:transform .15s,color .15s}
+#stars button.on{color:var(--gold);text-shadow:0 0 10px rgba(255,209,102,.6)}
+#stars button:hover{transform:scale(1.2)}
+#tb{padding:10px 18px;font-size:15px}
+#tb.on{background:var(--gold);color:#2a2418;border-color:var(--gold)}
+#gp{font-size:15px;color:var(--fg)}
+@media (max-width:600px){
+  #panel{right:8px;left:8px;top:auto;bottom:8px;width:auto;max-height:55vh;transform:translateY(calc(100% + 30px))}
+  #hint{display:none}
+  #tools{bottom:auto;top:92px}
+}
+</style>
+</head>
+<body>
+<div id="stage"><div id="world"><svg id="links"></svg></div></div>
+
+<div id="hud">
+  <h1>🍺 Beer Tree</h1>
+  <div class="bar"><i id="fill"></i></div>
+  <div id="stat"></div>
+</div>
+<div id="tools">
+  <button id="zi" aria-label="Zoom in">+</button>
+  <button id="zo" aria-label="Zoom out">−</button>
+  <button id="zr" class="t">Reset view</button>
+  <button id="rp" class="t">Reset progress</button>
+</div>
+<div id="hint">Drag to move · scroll to zoom · click a bubble</div>
+
+<aside id="panel" aria-live="polite">
+  <button id="x" aria-label="Close">×</button>
+  <div id="pp"></div>
+  <h2 id="pn"></h2>
+  <p id="pd"></p>
+  <div id="rate">
+    <div class="meta"><span>Strength: <b id="abv"></b></span><span>Try: <b id="ex"></b></span></div>
+    <div id="stars" role="group" aria-label="Rating"></div>
+    <button id="tb"></button>
+  </div>
+  <div id="gp" hidden></div>
+</aside>
+
+<script>
+/* ---------- DATA: edit this to add or change beers ---------- */
+const n=(name,abv,ex,desc,kids=[])=>({name,abv,ex,desc,kids});
+const g=(name,desc,kids,o={})=>({name,desc,kids,group:true,...o});
+
+const TREE=g("Beer","Every beer is water, malt, hops and yeast. The yeast and how it ferments splits the family: warm-fermenting Ales, cold-fermenting Lagers, and Others that mix methods or ferment wild.",[
+ g("Ale","Fermented warm (15–24 °C) with top-fermenting yeast. Fruity, expressive and often full-bodied.",[
+  n("Pale Ale","4.5–6%","Sierra Nevada Pale Ale","Balanced malt with citrusy hops. The gateway to hoppy beers."),
+  n("IPA","5.5–7.5%","Lagunitas IPA","Hop-forward, bitter and aromatic. Born as a pale ale strong enough for long sea voyages.",[
+   n("West Coast IPA","6–7.5%","Stone IPA","Clear, piney, resinous and bitter."),
+   n("Hazy IPA","5.5–7.5%","Tree House Julius","Cloudy, juicy and soft with low bitterness. Also called New England IPA."),
+   n("Double IPA","8–10%","Pliny the Elder","Bigger, boozier and loaded with hops.")]),
+  n("Amber Ale","4.5–6.2%","Fat Tire","Caramel malt sweetness with moderate hops."),
+  n("Brown Ale","4–6%","Newcastle Brown Ale","Nutty, toasty, with light chocolate notes."),
+  n("Porter","4.5–6.5%","Fuller's London Porter","Dark roasted malt with cocoa and coffee notes, medium body."),
+  n("Stout","4–8%","Guinness Draught","Very dark and roasty, like coffee. Grew out of porter.",[
+   n("Dry Stout","4–4.5%","Guinness Draught","Light-bodied, roasty, dry finish."),
+   n("Milk Stout","4–6%","Left Hand Milk Stout","Sweetened with lactose. Creamy and mellow."),
+   n("Imperial Stout","8–12%","Old Rasputin","Huge and rich, with dark chocolate and dark fruit.")]),
+  n("Wheat Beer","4.5–5.5%","Weihenstephaner Hefe","Brewed with a lot of wheat. Soft, hazy and refreshing.",[
+   n("Hefeweizen","4.5–5.5%","Weihenstephaner Hefe","German style with banana and clove aromas."),
+   n("Witbier","4.5–5%","Hoegaarden","Belgian white beer spiced with coriander and orange peel.")]),
+  n("Belgian Strong","7–12%","Chimay Blue","Strong, fruity and spicy Belgian abbey styles.",[
+   n("Dubbel","6–7.5%","Westmalle Dubbel","Dark, with raisin and caramel flavors."),
+   n("Tripel","8–10%","Westmalle Tripel","Golden, spicy and deceptively strong.")]),
+  n("Saison","5–8%","Saison Dupont","Dry, peppery and bubbly farmhouse ale."),
+  n("Barleywine","8–12%","Sierra Nevada Bigfoot","Strong, sweet and rich. A sipper, like wine.")
+ ],{ang:200,span:170,cd:300}),
+
+ g("Lager","Fermented cold (7–13 °C) with bottom-fermenting yeast, then stored cold for weeks. Clean, crisp and smooth.",[
+  n("Pilsner","4.5–5.5%","Budweiser Budvar","Golden and crisp with a snappy hop bitterness.",[
+   n("Czech Pilsner","4.5–5%","Pilsner Urquell","Rounder malt with floral Saaz hops."),
+   n("German Pils","4.5–5.2%","Bitburger","Drier, lighter and more bitter.")]),
+  n("Helles","4.7–5.4%","Augustiner Hell","Soft, bready Munich lager. Low bitterness."),
+  n("Märzen","5.5–6%","Paulaner Oktoberfest","Amber and toasty. The classic Oktoberfest beer."),
+  n("Dunkel","4.5–5.6%","Ayinger Altbairisch Dunkel","Dark Bavarian lager, bready and nutty."),
+  n("Schwarzbier","4.4–5.4%","Köstritzer Schwarzbier","Black lager that drinks light, with subtle roast."),
+  n("Bock","6–7.5%","Einbecker Ur-Bock","Strong, malty lager with little hop character.",[
+   n("Doppelbock","7–10%","Paulaner Salvator","Rich and bready. Monks called it liquid bread."),
+   n("Eisbock","9–14%","Kulmbacher Eisbock","Concentrated by freezing out some of the water.")]),
+  n("American Lager","4–5%","Budweiser","Very light, crisp and mass-market."),
+  n("Rauchbier","4.8–6%","Schlenkerla Märzen","Lager made with beechwood-smoked malt. Tastes of bacon and campfire.")
+ ],{ang:340,span:140,cd:270}),
+
+ g("Others","Hybrids that mix ale and lager methods, plus wild and sour fermentations.",[
+  g("Hybrid","Ale yeast fermented cold, or lager yeast fermented warm.",[
+   n("Kölsch","4.4–5.2%","Gaffel Kölsch","Cologne's pale, delicate and clean beer."),
+   n("Altbier","4.5–5.5%","Uerige Alt","Düsseldorf copper ale, aged cold. Bready and bittersweet."),
+   n("California Common","4.5–5.5%","Anchor Steam","Lager yeast fermented warm. Toasty and woody."),
+   n("Cream Ale","4.2–5.6%","Genesee Cream Ale","Smooth, light and slightly sweet.")]),
+  g("Wild & Sour","Fermented by wild yeast and bacteria, or soured on purpose. Tart, funky and complex.",[
+   n("Lambic","5–6.5%","Cantillon Classic Lambic","Spontaneously fermented in Belgium. Dry, funky and sour."),
+   n("Gueuze","5–7%","Boon Oude Geuze","A blend of young and old lambics. Sparkling and complex."),
+   n("Gose","4–5%","Anderson Valley Gose","Salty, sour and lightly spiced wheat beer."),
+   n("Berliner Weisse","2.5–4%","Berliner Kindl Weisse","Light and very tart wheat beer, often served with syrup.")
+  ],{cd:130})
+ ],{ang:90,span:120,cd:320})
+]);
+
+/* ---------- LAYOUT ---------- */
+const COLORS={Ale:"#ff9f43",Lager:"#4cc9f0",Others:"#b388ff",Beer:"#ffd166"};
+const R=[80,56,42,34], FONT=[24,18,13,11], DD=[0,230,270,130], DEEP=100;
+const nodes=[];
+function place(nd,depth,x,y,ang,span,color,parent,path){
+  Object.assign(nd,{depth,x,y,bx:x,by:y,r:R[depth],c:color,ox:0,oy:0,vx:0,vy:0,s:1,ph:Math.random()*6.28,parent,path,root:depth===0});
+  nodes.push(nd);
+  const k=nd.kids||[];
+  k.forEach((c,i)=>{
+    const a=depth===0?c.ang:(k.length===1?ang:ang-span/2+span*(i+.5)/k.length);
+    const rad=a*Math.PI/180, d=nd.cd||DD[depth+1];
+    place(c,depth+1,x+Math.cos(rad)*d,y+Math.sin(rad)*d,a,depth===0?c.span:DEEP,
+      depth===0?COLORS[c.name]:color,nd,path.concat(nd.name));
+  });
+}
+place(TREE,0,0,0,0,0,COLORS.Beer,null,[]);
+/* push overlapping bubbles apart */
+for(let it=0;it<300;it++){
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+    const a=nodes[i],b=nodes[j];let dx=b.x-a.x,dy=b.y-a.y;const d=Math.hypot(dx,dy)||1,m=a.r+b.r+16;
+    if(d<m){const p=(m-d)/d/4;dx*=p;dy*=p;if(!a.root){a.x-=dx;a.y-=dy}if(!b.root){b.x+=dx;b.y+=dy}}
+  }
+  nodes.forEach(q=>{if(!q.root){q.x+=(q.bx-q.x)*.01;q.y+=(q.by-q.y)*.01}});
+}
+
+/* ---------- STATE (saved in this browser) ---------- */
+const KEY="beerTree.v1";
+let S={};try{S=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const rateable=nodes.filter(q=>!q.group);
+const collect=q=>q.group?(q.kids||[]).flatMap(collect):[q].concat((q.kids||[]).flatMap(collect));
+const RANKS=[[0,"Thirsty beginner"],[.1,"Curious sipper"],[.3,"Taproom regular"],[.55,"Hop head"],[.8,"Cicerone in training"],[1,"Beer master"]];
+const $=id=>document.getElementById(id);
+
+/* ---------- BUILD DOM ---------- */
+const world=$("world"),links=$("links"),stage=$("stage"),NS="http://www.w3.org/2000/svg";
+nodes.forEach(q=>{
+  if(q.parent){const l=document.createElementNS(NS,"line");l.style.stroke=q.c;links.appendChild(l);q.line=l}
+  const el=document.createElement("div");
+  el.className="b";el.tabIndex=0;el.setAttribute("role","button");
+  el.style.cssText=`--c:${q.c};width:${q.r*2}px;height:${q.r*2}px;font-size:${FONT[q.depth]}px;font-weight:${q.depth<2?600:500}`;
+  el.innerHTML="<span></span><em></em>";el.firstChild.textContent=q.name;
+  el.onclick=()=>openNode(q);
+  el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openNode(q)}};
+  world.appendChild(el);q.el=el;q.em=el.lastChild;
+});
+
+/* ---------- VIEW: pan + zoom ---------- */
+const view={x:0,y:0,k:1};
+const apply=()=>world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.k})`;
+function fit(){
+  const xs=nodes.map(q=>q.x),ys=nodes.map(q=>q.y);
+  const w=Math.max(...xs)-Math.min(...xs)+240,h=Math.max(...ys)-Math.min(...ys)+260;
+  view.k=Math.min(innerWidth/w,innerHeight/h,1);
+  view.x=innerWidth/2-(Math.min(...xs)+Math.max(...xs))/2*view.k;
+  view.y=innerHeight/2-(Math.min(...ys)+Math.max(...ys))/2*view.k;apply();
+}
+function zoom(f,cx=innerWidth/2,cy=innerHeight/2){
+  const k=Math.min(2.5,Math.max(.25,view.k*f)),r=k/view.k;
+  view.x=cx-(cx-view.x)*r;view.y=cy-(cy-view.y)*r;view.k=k;apply();
+}
+let drag=null,mouse={x:1e9,y:1e9};
+const toWorld=(cx,cy)=>({x:(cx-view.x)/view.k,y:(cy-view.y)/view.k});
+stage.addEventListener("pointerdown",e=>{
+  if(e.target.closest(".b"))return;
+  drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y};stage.classList.add("drag");stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener("pointermove",e=>{
+  if(drag){view.x=drag.vx+e.clientX-drag.x;view.y=drag.vy+e.clientY-drag.y;apply()}
+  mouse=toWorld(e.clientX,e.clientY);
+});
+const endDrag=()=>{drag=null;stage.classList.remove("drag")};
+stage.addEventListener("pointerup",endDrag);stage.addEventListener("pointercancel",endDrag);
+stage.addEventListener("pointerleave",()=>{mouse={x:1e9,y:1e9}});
+stage.addEventListener("wheel",e=>{e.preventDefault();zoom(e.deltaY<0?1.1:1/1.1,e.clientX,e.clientY)},{passive:false});
+$("zi").onclick=()=>zoom(1.25);$("zo").onclick=()=>zoom(.8);$("zr").onclick=fit;
+addEventListener("resize",fit);
+
+/* ---------- BUBBLE MOTION ---------- */
+const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function tick(t){
+  for(const q of nodes){
+    let tx=calm?0:Math.sin(t/1400+q.ph)*3,ty=calm?0:Math.cos(t/1700+q.ph)*3;
+    const dx=q.x-mouse.x,dy=q.y-mouse.y,d=Math.hypot(dx,dy),reach=q.r*1.9;
+    if(!calm&&d<reach&&d>.1){const f=1-d/reach;tx+=dx/d*f*20;ty+=dy/d*f*20}
+    q.vx=(q.vx+(tx-q.ox)*.06)*.84;q.vy=(q.vy+(ty-q.oy)*.06)*.84;
+    q.ox+=q.vx;q.oy+=q.vy;
+    q.s+=((!calm&&d<q.r?1.07:1)-q.s)*.15;
+    q.el.style.transform=`translate(${q.x+q.ox-q.r}px,${q.y+q.oy-q.r}px) scale(${q.s})`;
+  }
+  for(const q of nodes){
+    if(!q.line)continue;const p=q.parent;
+    const ax=p.x+p.ox,ay=p.y+p.oy,bx=q.x+q.ox,by=q.y+q.oy,d=Math.hypot(bx-ax,by-ay)||1,ux=(bx-ax)/d,uy=(by-ay)/d;
+    q.line.setAttribute("x1",ax+ux*p.r);q.line.setAttribute("y1",ay+uy*p.r);
+    q.line.setAttribute("x2",bx-ux*q.r);q.line.setAttribute("y2",by-uy*q.r);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ---------- PANEL + RATINGS ---------- */
+let sel=null;const panel=$("panel"),stars=$("stars");
+for(let i=1;i<=5;i++){
+  const b=document.createElement("button");b.textContent="★";b.setAttribute("aria-label",i+" star"+(i>1?"s":""));
+  b.onclick=()=>{if(!sel)return;const s=S[sel.name]||{};s.rating=s.rating===i?0:i;s.tried=s.rating>0?true:s.tried;S[sel.name]=s;save();refresh()};
+  stars.appendChild(b);
+}
+$("tb").onclick=()=>{if(!sel)return;const s=S[sel.name]||{};s.tried=!s.tried;if(!s.tried)s.rating=0;S[sel.name]=s;save();refresh()};
+$("x").onclick=()=>{panel.classList.remove("on");sel=null;nodes.forEach(q=>q.el.classList.remove("sel"))};
+$("rp").onclick=()=>{if(confirm("Clear all tried beers and ratings in this browser?")){S={};save();refresh()}};
+
+function openNode(q){
+  sel=q;nodes.forEach(o=>o.el.classList.toggle("sel",o===q));
+  panel.style.setProperty("--c",q.c);
+  $("pp").textContent=q.path.join(" › ");
+  $("pn").textContent=q.name;$("pd").textContent=q.desc;
+  $("rate").hidden=!!q.group;$("gp").hidden=!q.group;
+  if(!q.group){$("abv").textContent=q.abv;$("ex").textContent=q.ex}
+  panel.classList.add("on");refresh();
+}
+function refresh(){
+  let tried=0,sum=0,rated=0;
+  rateable.forEach(q=>{
+    const s=S[q.name]||{};q.el.classList.toggle("tried",!!s.tried);
+    q.em.textContent=s.rating?"★".repeat(s.rating):"";
+    if(s.tried)tried++;if(s.rating){sum+=s.rating;rated++}
+  });
+  const pct=tried/rateable.length;
+  $("fill").style.width=pct*100+"%";
+  const rank=RANKS.filter(r=>pct>=r[0]).pop()[1];
+  $("stat").innerHTML=`<b>${tried}</b> of ${rateable.length} tried · avg ${rated?(sum/rated).toFixed(1)+"★":"–"}<br>${rank}`;
+  if(sel){
+    const s=S[sel.name]||{};
+    if(sel.group){const L=collect(sel).filter(q=>!q.group),t=L.filter(q=>(S[q.name]||{}).tried).length;
+      $("gp").textContent=sel.root?`You have tried ${t} of ${L.length} beers.`:`You have tried ${t} of ${L.length} beers in this branch.`}
+    else{[...stars.children].forEach((b,i)=>b.classList.toggle("on",i<(s.rating||0)));
+      const tb=$("tb");tb.classList.toggle("on",!!s.tried);tb.textContent=s.tried?"✓ Tried it":"Mark as tried"}
+  }
+}
+fit();refresh();requestAnimationFrame(tick);
+</script>
+</body>
+</html>

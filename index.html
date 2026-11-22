@@ -2,77 +2,94 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Beer Tree Challenge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--fg:#ecebe6;--mut:#a3a6ad;--gold:#ffd166}
-*{box-sizing:border-box}
+:root{--fg:#ecebe6;--mut:#a3a6ad;--gold:#ffd166;--green:#4ade80}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-html,body{margin:0;height:100%;overflow:hidden;color:var(--fg);
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;color:var(--fg);
   background:radial-gradient(circle at 50% 45%,#34373d,#25272b 60%,#1e2024);
   font-family:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif}
-#stage{position:fixed;inset:0;cursor:grab;touch-action:none}
+#stage{position:fixed;inset:0;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #stage.drag{cursor:grabbing}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
 #links{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
 #links line{stroke-width:2.5;stroke-linecap:round;opacity:.4}
 
 .b{position:absolute;left:0;top:0;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  text-align:center;line-height:1.08;cursor:pointer;user-select:none;-webkit-user-select:none;color:#fff;padding:4px;
+  text-align:center;line-height:1.08;cursor:pointer;color:#fff;padding:4px;
   background:
     radial-gradient(circle at 30% 26%,rgba(255,255,255,.38),rgba(255,255,255,0) 34%),
     radial-gradient(circle at 50% 58%,color-mix(in srgb,var(--c) 10%,transparent),color-mix(in srgb,var(--c) 42%,transparent) 100%),
     rgba(37,39,43,.78);
   border:1.5px solid color-mix(in srgb,var(--c) 75%,#fff);
   box-shadow:0 0 16px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 16px color-mix(in srgb,var(--c) 50%,transparent);
-  text-shadow:0 1px 4px rgba(0,0,0,.65);will-change:transform;transition:box-shadow .25s,filter .25s}
-.b:hover,.b.sel{filter:brightness(1.22);box-shadow:0 0 34px var(--c),inset 0 0 22px color-mix(in srgb,var(--c) 65%,transparent)}
+  text-shadow:0 1px 4px rgba(0,0,0,.65);will-change:transform}
+@media (hover:hover){.b:hover{filter:brightness(1.2);box-shadow:0 0 30px var(--c),inset 0 0 20px color-mix(in srgb,var(--c) 65%,transparent)}}
 .b:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .b span{pointer-events:none}
-.b em{position:absolute;top:100%;margin-top:3px;font-style:normal;font-size:12px;color:var(--gold);text-shadow:0 1px 3px #000;white-space:nowrap;pointer-events:none}
-.b.tried{border-color:var(--gold);box-shadow:0 0 22px color-mix(in srgb,var(--gold) 55%,transparent),0 0 12px var(--c),inset 0 0 18px color-mix(in srgb,var(--c) 60%,transparent)}
-.b.tried::after{content:"✓";position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#2a2418;font-size:11px;font-weight:600;display:grid;place-items:center;text-shadow:none}
+.b em{position:absolute;top:100%;margin-top:3px;font-style:normal;white-space:nowrap;pointer-events:none;text-shadow:0 1px 3px #000}
+.b em b{display:block;font-size:14px;font-weight:600;color:#86efac}
+.b em u{display:block;text-decoration:none;font-size:11px;color:#93c5fd}
+.b.tried{border:3px solid var(--green);box-shadow:0 0 22px rgba(74,222,128,.6),0 0 10px var(--c),inset 0 0 16px color-mix(in srgb,var(--c) 55%,transparent)}
 
-#hud{position:fixed;left:16px;top:14px;width:min(300px,calc(100vw - 32px));pointer-events:none}
-#hud h1{margin:0 0 8px;font-size:22px;font-weight:600;letter-spacing:.2px}
+#hud{position:fixed;left:16px;top:calc(12px + env(safe-area-inset-top));width:min(290px,calc(100vw - 32px));pointer-events:none}
+#hud h1{margin:0 0 8px;font-size:21px;font-weight:600}
+.who{display:grid;grid-template-columns:60px 1fr 52px;gap:8px;align-items:center;font-size:13px;color:var(--mut);margin-bottom:4px}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who b{color:var(--fg);font-weight:500;text-align:right}
 .bar{height:8px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden}
-.bar i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,#ff9f43,var(--gold));transition:width .5s}
-#stat{margin-top:6px;font-size:14px;color:var(--mut)}
-#stat b{color:var(--fg);font-weight:500}
-#tools{position:fixed;left:16px;bottom:16px;display:flex;gap:8px;align-items:center}
-#tools button,#tb,#x{font:inherit;color:var(--fg);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:999px;cursor:pointer}
-#tools button{width:38px;height:38px;font-size:18px}
-#tools button:hover,#tb:hover,#x:hover{background:rgba(255,255,255,.16)}
-#tools .t{width:auto;padding:0 14px;font-size:13px;color:var(--mut)}
-#hint{position:fixed;right:16px;bottom:18px;font-size:13px;color:var(--mut);pointer-events:none}
-button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.bar i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,#22c55e,var(--green));transition:width .5s}
+.bar.f i{background:linear-gradient(90deg,#3b82f6,#93c5fd)}
+#stat{margin-top:4px;font-size:13px;color:var(--mut)}
+#tools{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:8px}
+button{font:inherit;color:var(--fg);cursor:pointer}
+#tools button{width:42px;height:42px;font-size:19px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18)}
+#tools button:hover{background:rgba(255,255,255,.16)}
+#hint{position:fixed;right:16px;bottom:20px;font-size:13px;color:var(--mut);pointer-events:none}
+button:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
-#panel{position:fixed;right:16px;top:16px;width:min(330px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;
-  padding:20px;border-radius:22px;background:rgba(40,42,47,.92);backdrop-filter:blur(8px);
-  border:1.5px solid var(--c,#888);box-shadow:0 0 30px color-mix(in srgb,var(--c,#888) 45%,transparent);
-  transform:translateX(calc(100% + 30px));transition:transform .35s cubic-bezier(.2,.9,.3,1)}
-#panel.on{transform:none}
-#x{position:absolute;right:12px;top:12px;width:32px;height:32px;font-size:18px}
-#pp{font-size:13px;color:var(--mut);margin-right:36px;min-height:16px}
-#pn{margin:4px 0 8px;font-size:28px;font-weight:600;color:var(--c)}
-#pd{margin:0 0 14px;line-height:1.45;color:#d9d8d3}
-.meta{display:grid;gap:4px;margin-bottom:16px;font-size:14px;color:var(--mut)}
-.meta b{color:var(--fg);font-weight:500}
-#stars{display:flex;gap:4px;margin-bottom:14px}
-#stars button{font-size:30px;line-height:1;padding:0;background:none;border:0;cursor:pointer;color:rgba(255,255,255,.22);transition:transform .15s,color .15s}
-#stars button.on{color:var(--gold);text-shadow:0 0 10px rgba(255,209,102,.6)}
-#stars button:hover{transform:scale(1.2)}
-#tb{padding:10px 18px;font-size:15px}
-#tb.on{background:var(--gold);color:#2a2418;border-color:var(--gold)}
-#gp{font-size:15px;color:var(--fg)}
-@media (max-width:600px){
-  #panel{right:8px;left:8px;top:auto;bottom:8px;width:auto;max-height:55vh;transform:translateY(calc(100% + 30px))}
-  #hint{display:none}
-  #tools{bottom:auto;top:92px}
-}
+#scrim{position:fixed;inset:0;z-index:20;background:rgba(15,16,18,.62);opacity:0;pointer-events:none;transition:opacity .35s}
+#scrim.on{opacity:1;pointer-events:auto}
+#card{position:fixed;z-index:30;display:none;overflow:hidden;border-radius:50%;
+  background:radial-gradient(circle at 22% 6%,color-mix(in srgb,var(--c) 30%,transparent),transparent 55%),#2b2d32;
+  border:2px solid var(--c);box-shadow:0 0 40px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 30px color-mix(in srgb,var(--c) 28%,transparent);
+  transition:left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),width .45s cubic-bezier(.2,.8,.2,1),height .45s cubic-bezier(.2,.8,.2,1),border-radius .45s}
+#card.show{display:block}
+#cin{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;padding:22px 22px 28px;opacity:0;transition:opacity .15s}
+#card.open #cin{opacity:1;transition:opacity .3s .25s}
+#x{position:absolute;right:12px;top:12px;width:34px;height:34px;font-size:20px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)}
+#pp{font-size:13px;color:var(--mut);margin-right:44px;min-height:16px}
+#pn{margin:2px 0 10px;font-size:30px;font-weight:600;color:var(--c);text-shadow:0 0 18px color-mix(in srgb,var(--c) 55%,transparent)}
+#pd{margin:0 0 16px;font-size:16px;line-height:1.5;color:#e2e1dc}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:15px}
+.kv span{color:var(--mut)}.kv b{font-weight:500;text-align:right}
+#crit{margin:14px 0 18px;display:grid;gap:9px}
+.cr{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:8px;font-size:14px;color:var(--mut)}
+.cr div{display:flex;gap:4px}
+.cr i{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.12)}
+.cr i.f{background:var(--c);box-shadow:0 0 8px var(--c)}
+h4{margin:0 0 6px;font-size:15px;font-weight:500;display:flex;justify-content:space-between;align-items:baseline}
+h4 b{color:#86efac;font-size:18px}
+#stars{display:flex;gap:1px;margin-bottom:14px}
+#stars button{flex:1;min-width:0;height:40px;padding:0;font-size:27px;line-height:1;background:none;border:0;color:rgba(255,255,255,.2);transition:transform .12s}
+#stars button.on{color:var(--gold);text-shadow:0 0 10px rgba(255,209,102,.55)}
+#fr{font-size:15px;color:#93c5fd;padding:10px 12px;border-radius:14px;background:rgba(147,197,253,.1)}
+#gp{font-size:15px;line-height:1.6}
+
+#join{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(15,16,18,.75);padding:16px}
+#jf{width:min(360px,100%);padding:22px;border-radius:24px;background:#2b2d32;border:2px solid var(--gold);box-shadow:0 0 36px rgba(255,209,102,.3);display:grid;gap:12px}
+#jf h3{margin:0;font-size:22px}
+#jf label{display:grid;gap:4px;font-size:14px;color:var(--mut)}
+#jf input{font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#1f2124;color:var(--fg)}
+#jf button{padding:10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08)}
+#jf .go{background:var(--gold);color:#2a2418;border-color:var(--gold);font-weight:600}
+#jnote{font-size:13px;color:#fca5a5;margin:0}
+@media (max-width:600px){#hint{display:none}}
 </style>
 </head>
 <body>
@@ -80,92 +97,118 @@ button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
 <div id="hud">
   <h1>🍺 Beer Tree</h1>
-  <div class="bar"><i id="fill"></i></div>
+  <div class="who"><span>You</span><div class="bar"><i id="f1"></i></div><b id="c1"></b></div>
+  <div class="who" id="w2" hidden><span id="n2"></span><div class="bar f"><i id="f2"></i></div><b id="c2"></b></div>
   <div id="stat"></div>
 </div>
 <div id="tools">
   <button id="zi" aria-label="Zoom in">+</button>
   <button id="zo" aria-label="Zoom out">−</button>
-  <button id="zr" class="t">Reset view</button>
-  <button id="rp" class="t">Reset progress</button>
+  <button id="zr" aria-label="Fit tree to screen">⤢</button>
+  <button id="pf" aria-label="Profile and sync">👤</button>
 </div>
-<div id="hint">Drag to move · scroll to zoom · click a bubble</div>
+<div id="hint">Pinch or scroll to zoom · drag to move · tap a bubble</div>
 
-<aside id="panel" aria-live="polite">
-  <button id="x" aria-label="Close">×</button>
-  <div id="pp"></div>
-  <h2 id="pn"></h2>
-  <p id="pd"></p>
-  <div id="rate">
-    <div class="meta"><span>Strength: <b id="abv"></b></span><span>Try: <b id="ex"></b></span></div>
-    <div id="stars" role="group" aria-label="Rating"></div>
-    <button id="tb"></button>
+<div id="scrim"></div>
+<div id="card" role="dialog" aria-modal="true" aria-labelledby="pn">
+  <div id="cin">
+    <button id="x" aria-label="Close">×</button>
+    <div id="pp"></div>
+    <h2 id="pn"></h2>
+    <p id="pd"></p>
+    <div id="rate">
+      <div class="kv"><span>Крепость</span><b id="abv"></b></div>
+      <div class="kv"><span>Попробуйте</span><b id="ex"></b></div>
+      <div id="crit"></div>
+      <h4>Your rating <b id="myv"></b></h4>
+      <div id="stars" role="group" aria-label="Rating out of 10"></div>
+      <div id="fr"></div>
+    </div>
+    <div id="gp" hidden></div>
   </div>
-  <div id="gp" hidden></div>
-</aside>
+</div>
+
+<div id="join" hidden>
+  <form id="jf">
+    <h3>Who is drinking?</h3>
+    <label>Your name<input id="jn" maxlength="24" autocomplete="off"></label>
+    <label>Room code (the same for you and your friend)<input id="jr" maxlength="24" autocomplete="off" autocapitalize="none"></label>
+    <p id="jnote" hidden>Friend sync is off: the database address is not set in index.html yet.</p>
+    <button class="go">Save</button>
+    <button type="button" id="clr">Clear my ratings</button>
+    <button type="button" id="jc">Cancel</button>
+  </form>
+</div>
 
 <script>
+/* ---------- SETTINGS ---------- */
+// Paste your Firebase Realtime Database address between the quotes to share ratings with your friend.
+// Example: "https://beer-tree-123-default-rtdb.europe-west1.firebasedatabase.app"
+const CFG={DB_URL:""};
+
 /* ---------- DATA: edit this to add or change beers ---------- */
-const n=(name,abv,ex,desc,kids=[])=>({name,abv,ex,desc,kids});
+// n(name, strength, example beers, [bitterness, sweetness, sourness, body, aroma] (0–5), description, sub-beers)
+const n=(name,abv,ex,crit,desc,kids=[])=>({name,abv,ex,crit,desc,kids});
 const g=(name,desc,kids,o={})=>({name,desc,kids,group:true,...o});
+const CL=["Горечь","Сладость","Кислотность","Плотность","Аромат"];
 
-const TREE=g("Beer","Every beer is water, malt, hops and yeast. The yeast and how it ferments splits the family: warm-fermenting Ales, cold-fermenting Lagers, and Others that mix methods or ferment wild.",[
- g("Ale","Fermented warm (15–24 °C) with top-fermenting yeast. Fruity, expressive and often full-bodied.",[
-  n("Pale Ale","4.5–6%","Sierra Nevada Pale Ale","Balanced malt with citrusy hops. The gateway to hoppy beers."),
-  n("IPA","5.5–7.5%","Lagunitas IPA","Hop-forward, bitter and aromatic. Born as a pale ale strong enough for long sea voyages.",[
-   n("West Coast IPA","6–7.5%","Stone IPA","Clear, piney, resinous and bitter."),
-   n("Hazy IPA","5.5–7.5%","Tree House Julius","Cloudy, juicy and soft with low bitterness. Also called New England IPA."),
-   n("Double IPA","8–10%","Pliny the Elder","Bigger, boozier and loaded with hops.")]),
-  n("Amber Ale","4.5–6.2%","Fat Tire","Caramel malt sweetness with moderate hops."),
-  n("Brown Ale","4–6%","Newcastle Brown Ale","Nutty, toasty, with light chocolate notes."),
-  n("Porter","4.5–6.5%","Fuller's London Porter","Dark roasted malt with cocoa and coffee notes, medium body."),
-  n("Stout","4–8%","Guinness Draught","Very dark and roasty, like coffee. Grew out of porter.",[
-   n("Dry Stout","4–4.5%","Guinness Draught","Light-bodied, roasty, dry finish."),
-   n("Milk Stout","4–6%","Left Hand Milk Stout","Sweetened with lactose. Creamy and mellow."),
-   n("Imperial Stout","8–12%","Old Rasputin","Huge and rich, with dark chocolate and dark fruit.")]),
-  n("Wheat Beer","4.5–5.5%","Weihenstephaner Hefe","Brewed with a lot of wheat. Soft, hazy and refreshing.",[
-   n("Hefeweizen","4.5–5.5%","Weihenstephaner Hefe","German style with banana and clove aromas."),
-   n("Witbier","4.5–5%","Hoegaarden","Belgian white beer spiced with coriander and orange peel.")]),
-  n("Belgian Strong","7–12%","Chimay Blue","Strong, fruity and spicy Belgian abbey styles.",[
-   n("Dubbel","6–7.5%","Westmalle Dubbel","Dark, with raisin and caramel flavors."),
-   n("Tripel","8–10%","Westmalle Tripel","Golden, spicy and deceptively strong.")]),
-  n("Saison","5–8%","Saison Dupont","Dry, peppery and bubbly farmhouse ale."),
-  n("Barleywine","8–12%","Sierra Nevada Bigfoot","Strong, sweet and rich. A sipper, like wine.")
- ],{ang:200,span:170,cd:300}),
+const TREE=g("Beer","Пиво делают из воды, солода, хмеля и дрожжей, а вкус определяется тем, как именно бродят дрожжи. Поэтому пиво делится на эли (тёплое брожение), лагеры (холодное брожение) и «остальное»: гибриды и дикие, кислые сорта. Идите от центра по веткам: у каждого стиля свой характер.",[
+ g("Ale","Эли варят на верховых дрожжах при тёплой температуре (15–24 °C), поэтому они получаются ароматными, фруктовыми и многогранными. В них часто слышны цитрусы, карамель, специи и обжаренный солод. Обычно эль плотнее и «разговорчивее» лагера.",[
+  n("Pale Ale","4.5–6%","Sierra Nevada Pale Ale",[3,2,0,2,3],"Классический светлый эль золотисто-медного цвета с цитрусовым и травяным ароматом хмеля. Солодовая сладость уравновешивает горечь, поэтому пить легко. Отличная точка входа в мир хмелевого пива."),
+  n("IPA","5.5–7.5%","Lagunitas IPA",[4,1,0,2,5],"India Pale Ale: яркий хмелевой аромат грейпфрута, смолы и тропических фруктов. Горечь заметная, но у хорошего IPA она чистая и недолгая. Тело среднее, послевкусие сухое.",[
+   n("West Coast IPA","6–7.5%","Stone IPA",[5,1,0,2,5],"Прозрачный, сухой и очень горький, с запахом хвои, смолы и грейпфрутовой корки. Сладости почти нет, поэтому хмель звучит на полную громкость. Для тех, кто любит классическую «злую» горечь."),
+   n("Hazy IPA","5.5–7.5%","Tree House Julius",[2,2,0,3,5],"Мутный, сочный и мягкий: пахнет манго, персиком и апельсиновым соком. Горечь низкая, текстура шелковистая, почти как у сока. Самый дружелюбный вид IPA для новичков."),
+   n("Double IPA","8–10%","Pliny the Elder",[5,2,0,3,5],"Усиленный IPA с огромным количеством хмеля и алкоголя. Много смолы, цитрусов и тропических фруктов, тело плотное, а лёгкая сладость смягчает горечь. Пьют медленно.")]),
+  n("Amber Ale","4.5–6.2%","Fat Tire",[2,3,0,3,2],"Янтарный эль с карамельной и хлебной сладостью. Хмель умеренный и лишь добавляет травяные и цитрусовые нотки. Мягкий, сбалансированный и очень «застольный»."),
+  n("Brown Ale","4–6%","Newcastle Brown Ale",[2,3,0,3,3],"Коричневый эль с нотами орехов, тоста, карамели и лёгкого шоколада. Горечь низкая, тело среднее, вкус тёплый и уютный. Похоже на хлебную корочку с ореховым маслом."),
+  n("Porter","4.5–6.5%","Fuller's London Porter",[2,3,0,3,3],"Тёмное пиво из обжаренного солода со вкусом какао, кофе и поджаренного хлеба. Горечь мягкая, тело среднее, сладость лёгкая. Мягче стаута, хорошо подходит для первого знакомства с тёмным."),
+  n("Stout","4–8%","Guinness Draught",[3,2,0,4,4],"Почти чёрное пиво с ярким вкусом обжаренного ячменя, кофе и тёмного шоколада. Горечь идёт не от хмеля, а от обжарки. Плотное, бархатистое, с долгим послевкусием.",[
+   n("Dry Stout","4–4.5%","Guinness Draught",[3,1,0,2,3],"Ирландский классик: очень тёмный, но лёгкий по телу и невысокий по градусу. Вкус сухой, с горчинкой обжаренного зерна и кофе. Часто подаётся с плотной сливочной пеной."),
+   n("Milk Stout","4–6%","Left Hand Milk Stout",[1,4,0,4,3],"Стаут с лактозой, которая не сбраживается и остаётся приятной сладостью. Вкус как у кофе с молоком и шоколадом, текстура сливочная. Горечи мало, пьётся почти как десерт."),
+   n("Imperial Stout","8–12%","Old Rasputin",[3,4,0,5,5],"Огромный, густой и крепкий. Горький шоколад, эспрессо, тёмные сухофрукты и тёплый алкоголь. Тело плотное, как сироп: пиво для долгого неторопливого вечера.")]),
+  n("Wheat Beer","4.5–5.5%","Weihenstephaner Hefe",[1,2,1,2,3],"Светлое, мягкое и освежающее пиво с большой долей пшеницы. Пшеница даёт нежную, «хлебную» текстуру и лёгкую кислинку. Горечи почти нет, поэтому оно отлично подходит для жаркого дня.",[
+   n("Hefeweizen","4.5–5.5%","Weihenstephaner Hefe",[1,2,1,2,4],"Нефильтрованное немецкое пшеничное: мутное, с ароматом банана, гвоздики и жевательной резинки. Вкус мягкий, с лёгкой кислинкой и пышной пеной. Горечи почти нет."),
+   n("Witbier","4.5–5%","Hoegaarden",[1,2,1,2,4],"Бельгийское «белое» пиво со специями: пахнет кориандром и апельсиновой цедрой. Лёгкое, мутное, цитрусовое и слегка пряное. Очень освежающий, почти летний напиток.")]),
+  n("Belgian Strong","7–12%","Chimay Blue",[2,3,0,4,4],"Крепкие бельгийские эли: фруктовые (изюм, груша, банан), пряные и согревающие. Тело насыщенное, но финиш сухой. Алкоголь хорошо спрятан, поэтому такие сорта коварны.",[
+   n("Dubbel","6–7.5%","Westmalle Dubbel",[2,4,0,4,4],"Тёмный бельгийский эль: изюм, чернослив, карамель и немного специй. Сладость средняя, горечь низкая, тело плотное. Напоминает хлебный пудинг с сухофруктами."),
+   n("Tripel","8–10%","Westmalle Tripel",[2,3,0,3,4],"Золотистый, но крепкий. Груша, банан, лёгкая пряность и медовые оттенки, финиш сухой. Пьётся удивительно легко, хотя градус высокий.")]),
+  n("Saison","5–8%","Saison Dupont",[3,1,1,1,4],"Фермерский эль: очень сухой, игристый, с оттенками перца, цитруса и трав. Лёгкое тело и яркая газация делают его освежающим. Горчинка средняя, кислинка едва заметна."),
+  n("Barleywine","8–12%","Sierra Nevada Bigfoot",[3,5,0,5,5],"«Ячменное вино»: насыщенное, сладкое и очень плотное. Карамель, мёд, сухофрукты и тёплый алкоголь, а хмель добавляет горечь для баланса. Пьют небольшими порциями, как ликёр.")
+ ],{ang:200,span:190,cd:215}),
 
- g("Lager","Fermented cold (7–13 °C) with bottom-fermenting yeast, then stored cold for weeks. Clean, crisp and smooth.",[
-  n("Pilsner","4.5–5.5%","Budweiser Budvar","Golden and crisp with a snappy hop bitterness.",[
-   n("Czech Pilsner","4.5–5%","Pilsner Urquell","Rounder malt with floral Saaz hops."),
-   n("German Pils","4.5–5.2%","Bitburger","Drier, lighter and more bitter.")]),
-  n("Helles","4.7–5.4%","Augustiner Hell","Soft, bready Munich lager. Low bitterness."),
-  n("Märzen","5.5–6%","Paulaner Oktoberfest","Amber and toasty. The classic Oktoberfest beer."),
-  n("Dunkel","4.5–5.6%","Ayinger Altbairisch Dunkel","Dark Bavarian lager, bready and nutty."),
-  n("Schwarzbier","4.4–5.4%","Köstritzer Schwarzbier","Black lager that drinks light, with subtle roast."),
-  n("Bock","6–7.5%","Einbecker Ur-Bock","Strong, malty lager with little hop character.",[
-   n("Doppelbock","7–10%","Paulaner Salvator","Rich and bready. Monks called it liquid bread."),
-   n("Eisbock","9–14%","Kulmbacher Eisbock","Concentrated by freezing out some of the water.")]),
-  n("American Lager","4–5%","Budweiser","Very light, crisp and mass-market."),
-  n("Rauchbier","4.8–6%","Schlenkerla Märzen","Lager made with beechwood-smoked malt. Tastes of bacon and campfire.")
- ],{ang:340,span:140,cd:270}),
+ g("Lager","Лагеры бродят на низовых дрожжах на холоде (7–13 °C) и потом неделями вызревают. Вкус получается чистым, чётким и лёгким, без лишних фруктовых оттенков. Это самое популярное пиво в мире, но среди лагеров есть и тёмные, и крепкие, и даже копчёные.",[
+  n("Pilsner","4.5–5.5%","Budweiser Budvar",[3,1,0,2,3],"Светлый лагер золотого цвета с чистым вкусом. Хлебный солод, цветочно-травяной хмель и заметная, но приятная горечь. Освежает и оставляет сухое послевкусие.",[
+   n("Czech Pilsner","4.5–5%","Pilsner Urquell",[3,2,0,2,3],"Оригинальный пилзнер: насыщенный солод с оттенком хлебной корки и мёда. Хмель Saaz даёт цветочно-пряный аромат. Тело чуть плотнее обычного, горечь мягкая и округлая."),
+   n("German Pils","4.5–5.2%","Bitburger",[4,1,0,1,3],"Суше, легче и горче чешского. Аромат хмеля травяной и цветочный, вкус очень чистый, а послевкусие резкое и освежающее.")]),
+  n("Helles","4.7–5.4%","Augustiner Hell",[1,2,0,2,2],"Мюнхенский светлый лагер: мягкий, хлебный и чуть сладковатый. Хмеля и горечи мало, поэтому пьётся легко и гладко. Идеален для первого знакомства с лагерами."),
+  n("Märzen","5.5–6%","Paulaner Oktoberfest",[2,3,0,3,2],"Янтарный лагер со вкусом тоста, карамели и хлебной корки. Сладость умеренная, горечь мягкая, тело среднее. Это классическое пиво Октоберфеста."),
+  n("Dunkel","4.5–5.6%","Ayinger Altbairisch Dunkel",[1,3,0,3,3],"Тёмный баварский лагер: корочка чёрного хлеба, орехи и нотка карамели. Несмотря на цвет, тело среднее, а вкус мягкий. Горечь слабая."),
+  n("Schwarzbier","4.4–5.4%","Köstritzer Schwarzbier",[2,2,0,2,3],"Чёрный лагер, но лёгкий: оттенки жареного зерна, какао и горького шоколада без тяжести. Тело среднее и чистое. Послевкусие сухое."),
+  n("Bock","6–7.5%","Einbecker Ur-Bock",[2,4,0,4,3],"Крепкий солодовый лагер: хлебный мякиш, карамель, тосты и лёгкий ореховый оттенок. Хмель почти не слышен. Сладость заметная, тело плотное.",[
+   n("Doppelbock","7–10%","Paulaner Salvator",[2,5,0,5,4],"Двойной бок: очень солодовый, с нотами карамели, сухофруктов и поджаренного хлеба. Сладкий, густой и тёплый, монахи называли его «жидким хлебом». Горечь минимальна."),
+   n("Eisbock","9–14%","Kulmbacher Eisbock",[2,5,0,5,5],"Бок, из которого вымораживанием убрали часть воды. Вкус очень концентрированный: ликёрная сладость, сухофрукты и тёплый алкоголь. Пьют маленькими глотками.")]),
+  n("American Lager","4–5%","Budweiser",[1,1,0,1,1],"Очень лёгкое, прозрачное и хорошо газированное пиво. Вкус нейтральный, слегка зерновой и немного сладковатый, горечи почти нет. Подаётся ледяным для утоления жажды."),
+  n("Rauchbier","4.8–6%","Schlenkerla Märzen",[2,3,0,3,5],"Лагер на копчёном буковом солоде: пахнет костром, беконом и копчёной колбасой. Под дымом прячется сладковатый солод. Вкус необычный, его принимают или отвергают с первого глотка.")
+ ],{ang:340,span:150,cd:200}),
 
- g("Others","Hybrids that mix ale and lager methods, plus wild and sour fermentations.",[
-  g("Hybrid","Ale yeast fermented cold, or lager yeast fermented warm.",[
-   n("Kölsch","4.4–5.2%","Gaffel Kölsch","Cologne's pale, delicate and clean beer."),
-   n("Altbier","4.5–5.5%","Uerige Alt","Düsseldorf copper ale, aged cold. Bready and bittersweet."),
-   n("California Common","4.5–5.5%","Anchor Steam","Lager yeast fermented warm. Toasty and woody."),
-   n("Cream Ale","4.2–5.6%","Genesee Cream Ale","Smooth, light and slightly sweet.")]),
-  g("Wild & Sour","Fermented by wild yeast and bacteria, or soured on purpose. Tart, funky and complex.",[
-   n("Lambic","5–6.5%","Cantillon Classic Lambic","Spontaneously fermented in Belgium. Dry, funky and sour."),
-   n("Gueuze","5–7%","Boon Oude Geuze","A blend of young and old lambics. Sparkling and complex."),
-   n("Gose","4–5%","Anderson Valley Gose","Salty, sour and lightly spiced wheat beer."),
-   n("Berliner Weisse","2.5–4%","Berliner Kindl Weisse","Light and very tart wheat beer, often served with syrup.")
-  ],{cd:130})
- ],{ang:90,span:120,cd:320})
+ g("Others","Здесь собраны необычные способы брожения. Гибриды сочетают приёмы элей и лагеров, а дикие и кислые сорта бродят на диких дрожжах и бактериях. Вкус может быть очень освежающим, кислым, солёным или «деревенским».",[
+  g("Hybrid","Гибриды сочетают эльские дрожжи с холодным вызреванием или лагерные дрожжи с тёплым брожением. Результат: чистый вкус лагера и лёгкая фруктовость эля. Хороший выбор, когда хочется чего-то среднего.",[
+   n("Kölsch","4.4–5.2%","Gaffel Kölsch",[2,1,0,1,2],"Кёльнский светлый эль, который вызревает на холоде, как лагер. Вкус очень чистый и лёгкий, с нотками яблока и хлеба. Горечь едва ощутима."),
+   n("Altbier","4.5–5.5%","Uerige Alt",[3,2,0,3,3],"Дюссельдорфский «старый» эль медного цвета: хлебный солод, лёгкая ореховость и заметная горечь. Вызревает на холоде, поэтому вкус чистый. Баланс между сладким и горьким."),
+   n("California Common","4.5–5.5%","Anchor Steam",[3,2,0,3,3],"Лагерные дрожжи, но тёплое брожение. Вкус тостовый и карамельный, с древесно-мятным оттенком хмеля. Горечь средняя, пиво бодрое и освежающее."),
+   n("Cream Ale","4.2–5.6%","Genesee Cream Ale",[1,2,0,1,1],"Лёгкий, гладкий и слегка сладковатый, с кукурузными нотками. Хмеля мало, тело лёгкое, газация мягкая. Подойдёт тем, кому нравятся простые лагеры.")]),
+  g("Wild & Sour","Эти сорта бродят на диких дрожжах и молочнокислых бактериях или специально подкисляются. Вкус кислый, сочный, иногда солёный или с «амбарным» оттенком. Они освежают, как лимонад, и совсем не похожи на привычное пиво.",[
+   n("Lambic","5–6.5%","Cantillon Classic Lambic",[1,1,5,2,5],"Бельгийское пиво спонтанного брожения: бродит на диких дрожжах, которые попадают из воздуха. Вкус сухой, кислый и «амбарный», с яблоком и лимоном. Совсем не сладкий, почти без пены."),
+   n("Gueuze","5–7%","Boon Oude Geuze",[1,1,5,2,5],"Смесь молодых и выдержанных ламбиков, которая доходит до готовности в бутылке. Игристое, кислое и сложное: лимон, яблоко, мёд и лёгкая «землистость». Его часто сравнивают с шампанским."),
+   n("Gose","4–5%","Anderson Valley Gose",[0,1,3,1,3],"Немецкое пшеничное пиво с солью и кориандром. Вкус кисло-солёный, лимонный и очень освежающий. Тело лёгкое, горечи почти нет."),
+   n("Berliner Weisse","2.5–4%","Berliner Kindl Weisse",[0,1,5,1,2],"Лёгкое пшеничное пиво с очень высокой кислотностью и низким градусом. Вкус как у лимонада или кефира с цитрусовой свежестью. В Берлине его подают с малиновым или лесным сиропом.")
+  ],{cd:110})
+ ],{ang:90,span:110,cd:215})
 ]);
 
-/* ---------- LAYOUT ---------- */
+/* ---------- LAYOUT (compact) ---------- */
 const COLORS={Ale:"#ff9f43",Lager:"#4cc9f0",Others:"#b388ff",Beer:"#ffd166"};
-const R=[80,56,42,34], FONT=[24,18,13,11], DD=[0,230,270,130], DEEP=100;
+const R=[80,56,42,34],FONT=[24,18,13,11],DD=[0,175,205,110],DEEP=140;
 const nodes=[];
 function place(nd,depth,x,y,ang,span,color,parent,path){
   Object.assign(nd,{depth,x,y,bx:x,by:y,r:R[depth],c:color,ox:0,oy:0,vx:0,vy:0,s:1,ph:Math.random()*6.28,parent,path,root:depth===0});
@@ -173,84 +216,108 @@ function place(nd,depth,x,y,ang,span,color,parent,path){
   const k=nd.kids||[];
   k.forEach((c,i)=>{
     const a=depth===0?c.ang:(k.length===1?ang:ang-span/2+span*(i+.5)/k.length);
-    const rad=a*Math.PI/180, d=nd.cd||DD[depth+1];
-    place(c,depth+1,x+Math.cos(rad)*d,y+Math.sin(rad)*d,a,depth===0?c.span:DEEP,
-      depth===0?COLORS[c.name]:color,nd,path.concat(nd.name));
+    const rad=a*Math.PI/180,d=nd.cd||DD[depth+1];
+    place(c,depth+1,x+Math.cos(rad)*d,y+Math.sin(rad)*d,a,depth===0?c.span:DEEP,depth===0?COLORS[c.name]:color,nd,path.concat(nd.name));
   });
 }
 place(TREE,0,0,0,0,0,COLORS.Beer,null,[]);
-/* push overlapping bubbles apart */
-for(let it=0;it<300;it++){
+for(let it=0;it<400;it++){
   for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
-    const a=nodes[i],b=nodes[j];let dx=b.x-a.x,dy=b.y-a.y;const d=Math.hypot(dx,dy)||1,m=a.r+b.r+16;
+    const a=nodes[i],b=nodes[j];let dx=b.x-a.x,dy=b.y-a.y;const d=Math.hypot(dx,dy)||1,m=a.r+b.r+10;
     if(d<m){const p=(m-d)/d/4;dx*=p;dy*=p;if(!a.root){a.x-=dx;a.y-=dy}if(!b.root){b.x+=dx;b.y+=dy}}
   }
-  nodes.forEach(q=>{if(!q.root){q.x+=(q.bx-q.x)*.01;q.y+=(q.by-q.y)*.01}});
+  nodes.forEach(q=>{if(!q.root){q.x+=(q.bx-q.x)*.015;q.y+=(q.by-q.y)*.015}});
 }
 
-/* ---------- STATE (saved in this browser) ---------- */
-const KEY="beerTree.v1";
-let S={};try{S=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+/* ---------- STATE ---------- */
+const $=id=>document.getElementById(id);
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const SK="beerTree.ratings.v2",PK="beerTree.profile.v2";
+let S=load(SK,{});        // my ratings: { "IPA": 7 }
+let P=load(PK,null);      // { name, room }
+let F={name:"",d:{}};     // friend
+const DB=CFG.DB_URL.replace(/\/$/,"");
+const live=()=>!!(DB&&P&&P.name&&P.room);
 const rateable=nodes.filter(q=>!q.group);
 const collect=q=>q.group?(q.kids||[]).flatMap(collect):[q].concat((q.kids||[]).flatMap(collect));
 const RANKS=[[0,"Thirsty beginner"],[.1,"Curious sipper"],[.3,"Taproom regular"],[.55,"Hop head"],[.8,"Cicerone in training"],[1,"Beer master"]];
-const $=id=>document.getElementById(id);
 
 /* ---------- BUILD DOM ---------- */
 const world=$("world"),links=$("links"),stage=$("stage"),NS="http://www.w3.org/2000/svg";
 nodes.forEach(q=>{
   if(q.parent){const l=document.createElementNS(NS,"line");l.style.stroke=q.c;links.appendChild(l);q.line=l}
   const el=document.createElement("div");
-  el.className="b";el.tabIndex=0;el.setAttribute("role","button");
+  el.className="b";el.tabIndex=0;el.setAttribute("role","button");el.setAttribute("aria-label",q.name);
   el.style.cssText=`--c:${q.c};width:${q.r*2}px;height:${q.r*2}px;font-size:${FONT[q.depth]}px;font-weight:${q.depth<2?600:500}`;
   el.innerHTML="<span></span><em></em>";el.firstChild.textContent=q.name;
-  el.onclick=()=>openNode(q);
   el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openNode(q)}};
-  world.appendChild(el);q.el=el;q.em=el.lastChild;
+  el.__q=q;world.appendChild(el);q.el=el;q.em=el.lastChild;
 });
 
-/* ---------- VIEW: pan + zoom ---------- */
-const view={x:0,y:0,k:1};
-const apply=()=>world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.k})`;
+/* ---------- VIEW: pinch, drag, wheel ---------- */
+const view={x:0,y:0,k:1,dirty:true};
+const MINK=.25,MAXK=3;
 function fit(){
   const xs=nodes.map(q=>q.x),ys=nodes.map(q=>q.y);
-  const w=Math.max(...xs)-Math.min(...xs)+240,h=Math.max(...ys)-Math.min(...ys)+260;
-  view.k=Math.min(innerWidth/w,innerHeight/h,1);
-  view.x=innerWidth/2-(Math.min(...xs)+Math.max(...xs))/2*view.k;
-  view.y=innerHeight/2-(Math.min(...ys)+Math.max(...ys))/2*view.k;apply();
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  view.k=Math.max(.5,Math.min(innerWidth/(x1-x0+220),innerHeight/(y1-y0+260),1));
+  view.x=innerWidth/2-(x0+x1)/2*view.k;view.y=innerHeight/2-(y0+y1)/2*view.k;view.dirty=true;
 }
 function zoom(f,cx=innerWidth/2,cy=innerHeight/2){
-  const k=Math.min(2.5,Math.max(.25,view.k*f)),r=k/view.k;
-  view.x=cx-(cx-view.x)*r;view.y=cy-(cy-view.y)*r;view.k=k;apply();
+  const k=Math.min(MAXK,Math.max(MINK,view.k*f)),r=k/view.k;
+  view.x=cx-(cx-view.x)*r;view.y=cy-(cy-view.y)*r;view.k=k;view.dirty=true;
 }
-let drag=null,mouse={x:1e9,y:1e9};
 const toWorld=(cx,cy)=>({x:(cx-view.x)/view.k,y:(cy-view.y)/view.k});
+let mouse={x:1e9,y:1e9};
+const ptr=new Map();let gest=null,pin=null;
+const pinch=()=>{const [a,b]=[...ptr.values()];return{d:Math.hypot(a.x-b.x,a.y-b.y)||1,mx:(a.x+b.x)/2,my:(a.y+b.y)/2}};
 stage.addEventListener("pointerdown",e=>{
-  if(e.target.closest(".b"))return;
-  drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y};stage.classList.add("drag");stage.setPointerCapture(e.pointerId);
+  stage.setPointerCapture(e.pointerId);
+  ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptr.size===1)gest={sx:e.clientX,sy:e.clientY,moved:false,multi:false,tgt:e.target.closest(".b")};
+  else if(gest){gest.multi=true;pin=pinch()}
+  stage.classList.add("drag");
 });
 stage.addEventListener("pointermove",e=>{
-  if(drag){view.x=drag.vx+e.clientX-drag.x;view.y=drag.vy+e.clientY-drag.y;apply()}
-  mouse=toWorld(e.clientX,e.clientY);
+  if(e.pointerType==="mouse")mouse=toWorld(e.clientX,e.clientY);
+  const p=ptr.get(e.pointerId);if(!p)return;
+  if(ptr.size===1){
+    view.x+=e.clientX-p.x;view.y+=e.clientY-p.y;view.dirty=true;
+    if(gest&&Math.hypot(e.clientX-gest.sx,e.clientY-gest.sy)>8)gest.moved=true;
+  }
+  p.x=e.clientX;p.y=e.clientY;
+  if(ptr.size===2&&pin){
+    const q=pinch(),k=Math.min(MAXK,Math.max(MINK,view.k*q.d/pin.d)),r=k/view.k;
+    view.x=q.mx-(pin.mx-view.x)*r;view.y=q.my-(pin.my-view.y)*r;view.k=k;view.dirty=true;pin=q;
+  }
 });
-const endDrag=()=>{drag=null;stage.classList.remove("drag")};
-stage.addEventListener("pointerup",endDrag);stage.addEventListener("pointercancel",endDrag);
-stage.addEventListener("pointerleave",()=>{mouse={x:1e9,y:1e9}});
-stage.addEventListener("wheel",e=>{e.preventDefault();zoom(e.deltaY<0?1.1:1/1.1,e.clientX,e.clientY)},{passive:false});
-$("zi").onclick=()=>zoom(1.25);$("zo").onclick=()=>zoom(.8);$("zr").onclick=fit;
-addEventListener("resize",fit);
+function up(e){
+  if(!ptr.delete(e.pointerId))return;
+  pin=null;
+  if(ptr.size===0){
+    stage.classList.remove("drag");
+    if(e.type==="pointerup"&&gest&&!gest.moved&&!gest.multi&&gest.tgt)openNode(gest.tgt.__q);
+    gest=null;
+  }else if(gest)gest.moved=true;
+}
+stage.addEventListener("pointerup",up);stage.addEventListener("pointercancel",up);
+stage.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")mouse={x:1e9,y:1e9}});
+stage.addEventListener("wheel",e=>{e.preventDefault();zoom(Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015)),e.clientX,e.clientY)},{passive:false});
+$("zi").onclick=()=>zoom(1.3);$("zo").onclick=()=>zoom(1/1.3);$("zr").onclick=fit;
 
-/* ---------- BUBBLE MOTION ---------- */
+/* ---------- BUBBLE MOTION (gentle) ---------- */
 const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function tick(t){
+  if(view.dirty){world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.k})`;view.dirty=false}
   for(const q of nodes){
-    let tx=calm?0:Math.sin(t/1400+q.ph)*3,ty=calm?0:Math.cos(t/1700+q.ph)*3;
+    let tx=calm?0:Math.sin(t/1600+q.ph)*2.5,ty=calm?0:Math.cos(t/1900+q.ph)*2.5;
     const dx=q.x-mouse.x,dy=q.y-mouse.y,d=Math.hypot(dx,dy),reach=q.r*1.9;
-    if(!calm&&d<reach&&d>.1){const f=1-d/reach;tx+=dx/d*f*20;ty+=dy/d*f*20}
-    q.vx=(q.vx+(tx-q.ox)*.06)*.84;q.vy=(q.vy+(ty-q.oy)*.06)*.84;
+    if(!calm&&d<reach&&d>.1){const f=1-d/reach;tx+=dx/d*f*4;ty+=dy/d*f*4}
+    q.vx=(q.vx+(tx-q.ox)*.025)*.86;q.vy=(q.vy+(ty-q.oy)*.025)*.86;
     q.ox+=q.vx;q.oy+=q.vy;
-    q.s+=((!calm&&d<q.r?1.07:1)-q.s)*.15;
+    q.s+=((!calm&&d<q.r?1.014:1)-q.s)*.08;
     q.el.style.transform=`translate(${q.x+q.ox-q.r}px,${q.y+q.oy-q.r}px) scale(${q.s})`;
   }
   for(const q of nodes){
@@ -262,46 +329,102 @@ function tick(t){
   requestAnimationFrame(tick);
 }
 
-/* ---------- PANEL + RATINGS ---------- */
-let sel=null;const panel=$("panel"),stars=$("stars");
-for(let i=1;i<=5;i++){
-  const b=document.createElement("button");b.textContent="★";b.setAttribute("aria-label",i+" star"+(i>1?"s":""));
-  b.onclick=()=>{if(!sel)return;const s=S[sel.name]||{};s.rating=s.rating===i?0:i;s.tried=s.rating>0?true:s.tried;S[sel.name]=s;save();refresh()};
+/* ---------- CARD: the bubble grows over the others ---------- */
+const card=$("card"),scrim=$("scrim"),stars=$("stars");
+let sel=null,hideT=null;
+for(let i=1;i<=10;i++){
+  const b=document.createElement("button");b.textContent="★";b.setAttribute("aria-label",i+" out of 10");
+  b.onclick=()=>{if(!sel)return;if(S[sel.name]===i)delete S[sel.name];else S[sel.name]=i;store(SK,S);queuePush();refresh()};
   stars.appendChild(b);
 }
-$("tb").onclick=()=>{if(!sel)return;const s=S[sel.name]||{};s.tried=!s.tried;if(!s.tried)s.rating=0;S[sel.name]=s;save();refresh()};
-$("x").onclick=()=>{panel.classList.remove("on");sel=null;nodes.forEach(q=>q.el.classList.remove("sel"))};
-$("rp").onclick=()=>{if(confirm("Clear all tried beers and ratings in this browser?")){S={};save();refresh()}};
-
 function openNode(q){
-  sel=q;nodes.forEach(o=>o.el.classList.toggle("sel",o===q));
-  panel.style.setProperty("--c",q.c);
-  $("pp").textContent=q.path.join(" › ");
-  $("pn").textContent=q.name;$("pd").textContent=q.desc;
+  clearTimeout(hideT);sel=q;
+  const r=q.el.getBoundingClientRect();
+  card.style.cssText=`--c:${q.c};left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;border-radius:50%`;
+  card.classList.remove("open");card.classList.add("show");
+  $("pp").textContent=q.path.join(" › ");$("pn").textContent=q.name;$("pd").textContent=q.desc;
   $("rate").hidden=!!q.group;$("gp").hidden=!q.group;
-  if(!q.group){$("abv").textContent=q.abv;$("ex").textContent=q.ex}
-  panel.classList.add("on");refresh();
+  if(!q.group){
+    $("abv").textContent=q.abv;$("ex").textContent=q.ex;
+    $("crit").innerHTML=q.crit.map((v,i)=>`<div class="cr"><span>${CL[i]}</span><div>${[1,2,3,4,5].map(m=>`<i class="${m<=v?"f":""}"></i>`).join("")}</div></div>`).join("");
+  }
+  $("cin").scrollTop=0;refresh();
+  q.el.style.visibility="hidden";
+  void card.offsetWidth;
+  const W=Math.min(innerWidth-24,440),H=Math.min(innerHeight-24,q.group?460:700);
+  Object.assign(card.style,{left:(innerWidth-W)/2+"px",top:(innerHeight-H)/2+"px",width:W+"px",height:H+"px",borderRadius:"34px"});
+  card.classList.add("open");scrim.classList.add("on");
 }
+function closeCard(){
+  if(!sel)return;const q=sel;sel=null;
+  const r=q.el.getBoundingClientRect();
+  card.classList.remove("open");scrim.classList.remove("on");
+  Object.assign(card.style,{left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",borderRadius:"50%"});
+  hideT=setTimeout(()=>{card.classList.remove("show");q.el.style.visibility=""},430);
+}
+$("x").onclick=closeCard;scrim.onclick=closeCard;
+addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("join").hidden)$("join").hidden=true;else closeCard()}});
+
+/* ---------- REFRESH UI ---------- */
 function refresh(){
-  let tried=0,sum=0,rated=0;
+  const total=rateable.length,fd=F.d||{};
+  let mine=0,sum=0,theirs=0;
   rateable.forEach(q=>{
-    const s=S[q.name]||{};q.el.classList.toggle("tried",!!s.tried);
-    q.em.textContent=s.rating?"★".repeat(s.rating):"";
-    if(s.tried)tried++;if(s.rating){sum+=s.rating;rated++}
+    const a=S[q.name]|0,b=fd[q.name]|0;
+    q.el.classList.toggle("tried",a>0);
+    q.em.innerHTML=(a?`<b>${a}/10</b>`:"")+(b?`<u>${esc(F.name)} ${b}/10</u>`:"");
+    if(a){mine++;sum+=a}if(b)theirs++;
   });
-  const pct=tried/rateable.length;
-  $("fill").style.width=pct*100+"%";
-  const rank=RANKS.filter(r=>pct>=r[0]).pop()[1];
-  $("stat").innerHTML=`<b>${tried}</b> of ${rateable.length} tried · avg ${rated?(sum/rated).toFixed(1)+"★":"–"}<br>${rank}`;
-  if(sel){
-    const s=S[sel.name]||{};
-    if(sel.group){const L=collect(sel).filter(q=>!q.group),t=L.filter(q=>(S[q.name]||{}).tried).length;
-      $("gp").textContent=sel.root?`You have tried ${t} of ${L.length} beers.`:`You have tried ${t} of ${L.length} beers in this branch.`}
-    else{[...stars.children].forEach((b,i)=>b.classList.toggle("on",i<(s.rating||0)));
-      const tb=$("tb");tb.classList.toggle("on",!!s.tried);tb.textContent=s.tried?"✓ Tried it":"Mark as tried"}
+  $("f1").style.width=mine/total*100+"%";$("c1").textContent=mine+"/"+total;
+  $("w2").hidden=!F.name;
+  if(F.name){$("n2").textContent=F.name;$("f2").style.width=theirs/total*100+"%";$("c2").textContent=theirs+"/"+total}
+  const rank=RANKS.filter(r=>mine/total>=r[0]).pop()[1];
+  $("stat").textContent=rank+(mine?" · avg "+(sum/mine).toFixed(1)+"/10":"");
+  if(!sel)return;
+  if(sel.group){
+    const L=collect(sel).filter(q=>!q.group),a=L.filter(q=>S[q.name]>0).length,b=L.filter(q=>fd[q.name]>0).length;
+    $("gp").innerHTML=`You have tried <b>${a}</b> of ${L.length} beers here.`+(F.name?`<br>${esc(F.name)} has tried <b>${b}</b> of ${L.length}.`:"");
+  }else{
+    const a=S[sel.name]|0,b=fd[sel.name]|0;
+    [...stars.children].forEach((s,i)=>s.classList.toggle("on",i<a));
+    $("myv").textContent=a?a+"/10":"not tried yet";
+    $("fr").textContent=F.name?(b?`${F.name}'s rating: ${b}/10`:`${F.name} has not rated this yet`):(live()?"Waiting for your friend to join the room":"Friend sync is off");
   }
 }
+
+/* ---------- SYNC WITH FRIEND (Firebase Realtime Database REST) ---------- */
+const enc=encodeURIComponent,safe=s=>s.trim().replace(/[.#$\[\]\/]/g,"").slice(0,24);
+let pt;const queuePush=()=>{clearTimeout(pt);pt=setTimeout(push,500)};
+async function push(){
+  if(!live())return;
+  try{await fetch(`${DB}/rooms/${enc(P.room)}/${enc(P.name)}.json`,{method:"PUT",body:JSON.stringify(S)})}catch(e){}
+}
+async function pull(){
+  if(!live())return;
+  try{
+    const all=(await (await fetch(`${DB}/rooms/${enc(P.room)}.json`)).json())||{};
+    const o=Object.keys(all).find(k=>k!==P.name);
+    F=o?{name:o,d:all[o]||{}}:{name:"",d:{}};refresh();
+  }catch(e){}
+}
+setInterval(pull,12000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)pull()});
+
+/* ---------- PROFILE ---------- */
+const jo=$("join");
+function showJoin(){$("jn").value=P?P.name:"";$("jr").value=P?P.room:"";$("jnote").hidden=!!DB;jo.hidden=false}
+$("pf").onclick=showJoin;$("jc").onclick=()=>jo.hidden=true;
+$("jf").onsubmit=e=>{
+  e.preventDefault();
+  const name=safe($("jn").value),room=safe($("jr").value).toLowerCase();
+  if(!name){$("jn").focus();return}
+  if(DB&&!room){$("jr").focus();return}
+  P={name,room};store(PK,P);F={name:"",d:{}};jo.hidden=true;refresh();push().then(pull);
+};
+$("clr").onclick=()=>{if(confirm("Clear all your ratings?")){S={};store(SK,S);push();refresh();jo.hidden=true}};
+
 fit();refresh();requestAnimationFrame(tick);
+if(DB&&!P)showJoin();else pull();
 </script>
 </body>
 </html>

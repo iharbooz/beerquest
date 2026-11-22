@@ -8,81 +8,103 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--fg:#ecebe6;--mut:#a3a6ad;--gold:#ffd166;--green:#4ade80}
+:root{--fg:#f3eee4;--mut:#b0ab9f;--gold:#ffc857;--green:#4ade80;--cream:#fff4d6}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;color:var(--fg);
-  background:radial-gradient(circle at 50% 45%,#34373d,#25272b 60%,#1e2024);
+  background:
+    radial-gradient(130% 55% at 50% 118%,rgba(255,160,40,.28),transparent 62%),
+    radial-gradient(circle at 50% 38%,#393c42,#282b2f 58%,#1b1c1f);
   font-family:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif}
-#stage{position:fixed;inset:0;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#bg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#stage{position:fixed;inset:0;z-index:1;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #stage.drag{cursor:grabbing}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
 #links{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
-#links line{stroke-width:2.5;stroke-linecap:round;opacity:.4}
+#links line{stroke-width:3;stroke-linecap:round;opacity:.5;filter:drop-shadow(0 0 4px currentColor)}
 
 .b{position:absolute;left:0;top:0;border-radius:50%;display:flex;align-items:center;justify-content:center;
   text-align:center;line-height:1.08;cursor:pointer;color:#fff;padding:4px;
   background:
-    radial-gradient(circle at 30% 26%,rgba(255,255,255,.38),rgba(255,255,255,0) 34%),
-    radial-gradient(circle at 50% 58%,color-mix(in srgb,var(--c) 10%,transparent),color-mix(in srgb,var(--c) 42%,transparent) 100%),
-    rgba(37,39,43,.78);
-  border:1.5px solid color-mix(in srgb,var(--c) 75%,#fff);
-  box-shadow:0 0 16px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 16px color-mix(in srgb,var(--c) 50%,transparent);
-  text-shadow:0 1px 4px rgba(0,0,0,.65);will-change:transform}
-@media (hover:hover){.b:hover{filter:brightness(1.2);box-shadow:0 0 30px var(--c),inset 0 0 20px color-mix(in srgb,var(--c) 65%,transparent)}}
+    radial-gradient(ellipse 40% 22% at 30% 19%,rgba(255,255,255,.6),rgba(255,255,255,0)),
+    radial-gradient(circle at 68% 92%,color-mix(in srgb,var(--c) 60%,transparent),transparent 58%),
+    radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--c) 12%,transparent),color-mix(in srgb,var(--c) 46%,transparent) 100%),
+    rgba(32,34,38,.82);
+  border:1.5px solid color-mix(in srgb,var(--c) 70%,#fff);
+  box-shadow:0 0 20px color-mix(in srgb,var(--c) 55%,transparent),inset 0 -9px 18px color-mix(in srgb,var(--c) 38%,transparent),inset 0 6px 12px rgba(255,255,255,.12);
+  text-shadow:0 1px 4px rgba(0,0,0,.7);will-change:transform}
+.b::after{content:"";position:absolute;right:17%;bottom:15%;width:9%;height:9%;border-radius:50%;background:rgba(255,255,255,.38);pointer-events:none}
+@media (hover:hover){.b:hover{filter:brightness(1.2);box-shadow:0 0 32px var(--c),inset 0 -9px 18px color-mix(in srgb,var(--c) 55%,transparent)}}
 .b:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .b span{pointer-events:none}
-.b em{position:absolute;top:100%;margin-top:3px;font-style:normal;white-space:nowrap;pointer-events:none;text-shadow:0 1px 3px #000}
+.b em{position:absolute;top:100%;margin-top:4px;font-style:normal;white-space:nowrap;pointer-events:none;text-shadow:0 1px 3px #000}
 .b em b{display:block;font-size:14px;font-weight:600;color:#86efac}
-.b em u{display:block;text-decoration:none;font-size:11px;color:#93c5fd}
-.b.tried{border:3px solid var(--green);box-shadow:0 0 22px rgba(74,222,128,.6),0 0 10px var(--c),inset 0 0 16px color-mix(in srgb,var(--c) 55%,transparent)}
+.b em s{display:block;text-decoration:none;font-size:11px;color:#bbf7d0;opacity:.8}
+.b.root{color:#3a2205;text-shadow:0 1px 0 rgba(255,255,255,.4);border-color:#ffe9b0;
+  background:
+    radial-gradient(ellipse 36% 20% at 30% 20%,rgba(255,255,255,.55),rgba(255,255,255,0)),
+    linear-gradient(180deg,#ffd978 0%,#f4a623 46%,#b9680a 100%);
+  box-shadow:0 0 50px rgba(255,190,60,.55),inset 0 -16px 26px rgba(120,60,0,.5),inset 0 8px 16px rgba(255,255,255,.3);
+  animation:pulse 4.5s ease-in-out infinite}
+.b.root::before{content:"";position:absolute;left:10%;right:10%;top:-16px;height:40px;pointer-events:none;
+  background:
+    radial-gradient(circle at 16% 62%,#fff6dc 0 13px,transparent 14px),
+    radial-gradient(circle at 38% 38%,#fffaf0 0 17px,transparent 18px),
+    radial-gradient(circle at 62% 42%,#fff6dc 0 16px,transparent 17px),
+    radial-gradient(circle at 84% 62%,#fffaf0 0 13px,transparent 14px);
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.b.root::after{display:none}
+@keyframes pulse{50%{box-shadow:0 0 72px rgba(255,190,60,.8),inset 0 -16px 26px rgba(120,60,0,.5),inset 0 8px 16px rgba(255,255,255,.3)}}
+.b.tried{border:3px solid var(--green);box-shadow:0 0 24px rgba(74,222,128,.65),0 0 10px var(--c),inset 0 -9px 18px color-mix(in srgb,var(--c) 45%,transparent)}
 
-#hud{position:fixed;left:16px;top:calc(12px + env(safe-area-inset-top));width:min(290px,calc(100vw - 32px));pointer-events:none}
-#hud h1{margin:0 0 8px;font-size:21px;font-weight:600}
-.who{display:grid;grid-template-columns:60px 1fr 52px;gap:8px;align-items:center;font-size:13px;color:var(--mut);margin-bottom:4px}
-.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.who b{color:var(--fg);font-weight:500;text-align:right}
-.bar{height:8px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden}
-.bar i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,#22c55e,var(--green));transition:width .5s}
-.bar.f i{background:linear-gradient(90deg,#3b82f6,#93c5fd)}
-#stat{margin-top:4px;font-size:13px;color:var(--mut)}
-#tools{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:8px}
+#tools{position:fixed;z-index:5;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:8px}
 button{font:inherit;color:var(--fg);cursor:pointer}
-#tools button{width:42px;height:42px;font-size:19px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18)}
-#tools button:hover{background:rgba(255,255,255,.16)}
-#hint{position:fixed;right:16px;bottom:20px;font-size:13px;color:var(--mut);pointer-events:none}
+#tools button{width:44px;height:44px;font-size:19px;border-radius:50%;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#tools button:hover{background:rgba(255,255,255,.18)}
+#hint{position:fixed;z-index:5;right:16px;bottom:20px;font-size:13px;color:var(--mut);pointer-events:none}
 button:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
-#scrim{position:fixed;inset:0;z-index:20;background:rgba(15,16,18,.62);opacity:0;pointer-events:none;transition:opacity .35s}
+#scrim{position:fixed;inset:0;z-index:20;background:rgba(14,15,17,.66);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .35s}
 #scrim.on{opacity:1;pointer-events:auto}
 #card{position:fixed;z-index:30;display:none;overflow:hidden;border-radius:50%;
-  background:radial-gradient(circle at 22% 6%,color-mix(in srgb,var(--c) 30%,transparent),transparent 55%),#2b2d32;
-  border:2px solid var(--c);box-shadow:0 0 40px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 30px color-mix(in srgb,var(--c) 28%,transparent);
+  background:
+    radial-gradient(circle at 88% 94%,rgba(255,255,255,.07) 0 14px,transparent 15px),
+    radial-gradient(circle at 78% 88%,rgba(255,255,255,.06) 0 7px,transparent 8px),
+    radial-gradient(circle at 93% 80%,rgba(255,255,255,.06) 0 5px,transparent 6px),
+    radial-gradient(circle at 20% 4%,color-mix(in srgb,var(--c) 34%,transparent),transparent 55%),
+    linear-gradient(180deg,#32353a,#25272b);
+  border:2px solid var(--c);box-shadow:0 0 44px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 30px color-mix(in srgb,var(--c) 26%,transparent);
   transition:left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),width .45s cubic-bezier(.2,.8,.2,1),height .45s cubic-bezier(.2,.8,.2,1),border-radius .45s}
 #card.show{display:block}
-#cin{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;padding:22px 22px 28px;opacity:0;transition:opacity .15s}
+#card::before{content:"";position:absolute;left:0;right:0;top:0;height:22px;z-index:2;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:
+    radial-gradient(circle at 14px 0,var(--cream) 13px,transparent 14px) 0 0/28px 22px repeat-x,
+    radial-gradient(circle at 0 0,#ffe9b8 10px,transparent 11px) 0 0/28px 16px repeat-x;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
+#card.open::before{opacity:1;transition:opacity .3s .3s}
+#cin{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;padding:34px 22px 28px;opacity:0;transition:opacity .15s}
 #card.open #cin{opacity:1;transition:opacity .3s .25s}
-#x{position:absolute;right:12px;top:12px;width:34px;height:34px;font-size:20px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)}
+#x{position:absolute;right:12px;top:28px;z-index:3;width:34px;height:34px;font-size:20px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22)}
 #pp{font-size:13px;color:var(--mut);margin-right:44px;min-height:16px}
-#pn{margin:2px 0 10px;font-size:30px;font-weight:600;color:var(--c);text-shadow:0 0 18px color-mix(in srgb,var(--c) 55%,transparent)}
-#pd{margin:0 0 16px;font-size:16px;line-height:1.5;color:#e2e1dc}
-.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:15px}
+#pn{margin:2px 0 10px;font-size:32px;font-weight:600;color:var(--c);text-shadow:0 0 20px color-mix(in srgb,var(--c) 55%,transparent)}
+#pd{margin:0 0 16px;font-size:16px;line-height:1.5;color:#e9e6df}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.09);font-size:15px}
 .kv span{color:var(--mut)}.kv b{font-weight:500;text-align:right}
 #crit{margin:14px 0 18px;display:grid;gap:9px}
 .cr{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:8px;font-size:14px;color:var(--mut)}
 .cr div{display:flex;gap:4px}
-.cr i{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.12)}
-.cr i.f{background:var(--c);box-shadow:0 0 8px var(--c)}
+.cr i{flex:1;height:9px;border-radius:9px;background:rgba(255,255,255,.12)}
+.cr i.f{background:linear-gradient(180deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));box-shadow:0 0 8px var(--c)}
 h4{margin:0 0 6px;font-size:15px;font-weight:500;display:flex;justify-content:space-between;align-items:baseline}
 h4 b{color:#86efac;font-size:18px}
-#stars{display:flex;gap:1px;margin-bottom:14px}
+#stars{display:flex;gap:1px;margin-bottom:12px}
 #stars button{flex:1;min-width:0;height:40px;padding:0;font-size:27px;line-height:1;background:none;border:0;color:rgba(255,255,255,.2);transition:transform .12s}
-#stars button.on{color:var(--gold);text-shadow:0 0 10px rgba(255,209,102,.55)}
-#fr{font-size:15px;color:#93c5fd;padding:10px 12px;border-radius:14px;background:rgba(147,197,253,.1)}
-#gp{font-size:15px;line-height:1.6}
+#stars button.on{color:var(--gold);text-shadow:0 0 12px rgba(255,200,87,.7)}
+#note{font-size:14px;line-height:1.4;color:var(--mut);margin:0 0 12px}
+#fr{font-size:15px;color:#93c5fd;padding:10px 12px;border-radius:14px;background:rgba(147,197,253,.1);border:1px solid rgba(147,197,253,.18)}
 
-#join{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(15,16,18,.75);padding:16px}
-#jf{width:min(360px,100%);padding:22px;border-radius:24px;background:#2b2d32;border:2px solid var(--gold);box-shadow:0 0 36px rgba(255,209,102,.3);display:grid;gap:12px}
+#join{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(14,15,17,.78);padding:16px}
+#jf{width:min(360px,100%);padding:22px;border-radius:24px;background:linear-gradient(180deg,#32353a,#25272b);border:2px solid var(--gold);box-shadow:0 0 36px rgba(255,200,87,.3);display:grid;gap:12px}
 #jf h3{margin:0;font-size:22px}
 #jf label{display:grid;gap:4px;font-size:14px;color:var(--mut)}
 #jf input{font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#1f2124;color:var(--fg)}
@@ -90,17 +112,13 @@ h4 b{color:#86efac;font-size:18px}
 #jf .go{background:var(--gold);color:#2a2418;border-color:var(--gold);font-weight:600}
 #jnote{font-size:13px;color:#fca5a5;margin:0}
 @media (max-width:600px){#hint{display:none}}
+@media (prefers-reduced-motion:reduce){.b.root{animation:none}}
 </style>
 </head>
 <body>
+<canvas id="bg"></canvas>
 <div id="stage"><div id="world"><svg id="links"></svg></div></div>
 
-<div id="hud">
-  <h1>🍺 Beer Tree</h1>
-  <div class="who"><span>You</span><div class="bar"><i id="f1"></i></div><b id="c1"></b></div>
-  <div class="who" id="w2" hidden><span id="n2"></span><div class="bar f"><i id="f2"></i></div><b id="c2"></b></div>
-  <div id="stat"></div>
-</div>
 <div id="tools">
   <button id="zi" aria-label="Zoom in">+</button>
   <button id="zo" aria-label="Zoom out">−</button>
@@ -116,22 +134,22 @@ h4 b{color:#86efac;font-size:18px}
     <div id="pp"></div>
     <h2 id="pn"></h2>
     <p id="pd"></p>
-    <div id="rate">
+    <div id="info">
       <div class="kv"><span>Крепость</span><b id="abv"></b></div>
       <div class="kv"><span>Попробуйте</span><b id="ex"></b></div>
       <div id="crit"></div>
-      <h4>Your rating <b id="myv"></b></h4>
-      <div id="stars" role="group" aria-label="Rating out of 10"></div>
-      <div id="fr"></div>
     </div>
-    <div id="gp" hidden></div>
+    <h4><span id="myh">Your rating</span><b id="myv"></b></h4>
+    <div id="stars" role="group" aria-label="Rating out of 10"></div>
+    <p id="note"></p>
+    <div id="fr"></div>
   </div>
 </div>
 
 <div id="join" hidden>
   <form id="jf">
     <h3>Who is drinking?</h3>
-    <label>Your name<input id="jn" maxlength="24" autocomplete="off"></label>
+    <label>Your unique username<input id="jn" maxlength="24" autocomplete="off"></label>
     <label>Room code (the same for you and your friend)<input id="jr" maxlength="24" autocomplete="off" autocapitalize="none"></label>
     <p id="jnote" hidden>Friend sync is off: the database address is not set in index.html yet.</p>
     <button class="go">Save</button>
@@ -144,7 +162,7 @@ h4 b{color:#86efac;font-size:18px}
 /* ---------- SETTINGS ---------- */
 // Paste your Firebase Realtime Database address between the quotes to share ratings with your friend.
 // Example: "https://beer-tree-123-default-rtdb.europe-west1.firebasedatabase.app"
-const CFG={DB_URL:"https://beerquest-2b051-default-rtdb.firebaseio.com/"};
+const CFG={DB_URL:""};
 
 /* ---------- DATA: edit this to add or change beers ---------- */
 // n(name, strength, example beers, [bitterness, sweetness, sourness, body, aroma] (0–5), description, sub-beers)
@@ -152,7 +170,7 @@ const n=(name,abv,ex,crit,desc,kids=[])=>({name,abv,ex,crit,desc,kids});
 const g=(name,desc,kids,o={})=>({name,desc,kids,group:true,...o});
 const CL=["Горечь","Сладость","Кислотность","Плотность","Аромат"];
 
-const TREE=g("Beer","Пиво делают из воды, солода, хмеля и дрожжей, а вкус определяется тем, как именно бродят дрожжи. Поэтому пиво делится на эли (тёплое брожение), лагеры (холодное брожение) и «остальное»: гибриды и дикие, кислые сорта. Идите от центра по веткам: у каждого стиля свой характер.",[
+const TREE=g("Пиво","Пиво делают из воды, солода, хмеля и дрожжей, а вкус определяется тем, как именно бродят дрожжи. Поэтому пиво делится на эли (тёплое брожение), лагеры (холодное брожение) и «остальное»: гибриды и дикие, кислые сорта. Идите от центра по веткам: у каждого стиля свой характер.",[
  g("Ale","Эли варят на верховых дрожжах при тёплой температуре (15–24 °C), поэтому они получаются ароматными, фруктовыми и многогранными. В них часто слышны цитрусы, карамель, специи и обжаренный солод. Обычно эль плотнее и «разговорчивее» лагера.",[
   n("Pale Ale","4.5–6%","Sierra Nevada Pale Ale",[3,2,0,2,3],"Классический светлый эль золотисто-медного цвета с цитрусовым и травяным ароматом хмеля. Солодовая сладость уравновешивает горечь, поэтому пить легко. Отличная точка входа в мир хмелевого пива."),
   n("IPA","5.5–7.5%","Lagunitas IPA",[4,1,0,2,5],"India Pale Ale: яркий хмелевой аромат грейпфрута, смолы и тропических фруктов. Горечь заметная, но у хорошего IPA она чистая и недолгая. Тело среднее, послевкусие сухое.",[
@@ -189,7 +207,7 @@ const TREE=g("Beer","Пиво делают из воды, солода, хмел
    n("Eisbock","9–14%","Kulmbacher Eisbock",[2,5,0,5,5],"Бок, из которого вымораживанием убрали часть воды. Вкус очень концентрированный: ликёрная сладость, сухофрукты и тёплый алкоголь. Пьют маленькими глотками.")]),
   n("American Lager","4–5%","Budweiser",[1,1,0,1,1],"Очень лёгкое, прозрачное и хорошо газированное пиво. Вкус нейтральный, слегка зерновой и немного сладковатый, горечи почти нет. Подаётся ледяным для утоления жажды."),
   n("Rauchbier","4.8–6%","Schlenkerla Märzen",[2,3,0,3,5],"Лагер на копчёном буковом солоде: пахнет костром, беконом и копчёной колбасой. Под дымом прячется сладковатый солод. Вкус необычный, его принимают или отвергают с первого глотка.")
- ],{ang:340,span:150,cd:200}),
+ ],{ang:340,span:170,cd:225}),
 
  g("Others","Здесь собраны необычные способы брожения. Гибриды сочетают приёмы элей и лагеров, а дикие и кислые сорта бродят на диких дрожжах и бактериях. Вкус может быть очень освежающим, кислым, солёным или «деревенским».",[
   g("Hybrid","Гибриды сочетают эльские дрожжи с холодным вызреванием или лагерные дрожжи с тёплым брожением. Результат: чистый вкус лагера и лёгкая фруктовость эля. Хороший выбор, когда хочется чего-то среднего.",[
@@ -206,50 +224,63 @@ const TREE=g("Beer","Пиво делают из воды, солода, хмел
  ],{ang:90,span:110,cd:215})
 ]);
 
-/* ---------- LAYOUT (compact) ---------- */
+/* ---------- LAYOUT (compact, no overlaps) ---------- */
 const COLORS={Ale:"#ff9f43",Lager:"#4cc9f0",Others:"#b388ff",Beer:"#ffd166"};
-const R=[80,56,42,34],FONT=[24,18,13,11],DD=[0,175,205,110],DEEP=140;
+const R=[80,56,42,34],FONT=[26,18,13,11],DD=[0,175,205,110];
 const nodes=[];
+const wt=c=>c.kids&&c.kids.length?1+c.kids.length*.9:1;
 function place(nd,depth,x,y,ang,span,color,parent,path){
   Object.assign(nd,{depth,x,y,bx:x,by:y,r:R[depth],c:color,ox:0,oy:0,vx:0,vy:0,s:1,ph:Math.random()*6.28,parent,path,root:depth===0});
   nodes.push(nd);
-  const k=nd.kids||[];
-  k.forEach((c,i)=>{
-    const a=depth===0?c.ang:(k.length===1?ang:ang-span/2+span*(i+.5)/k.length);
+  const k=nd.kids||[],tot=k.reduce((s,c)=>s+wt(c),0);let acc=0;
+  k.forEach(c=>{
+    let a;
+    if(depth===0)a=c.ang;
+    else if(k.length===1)a=ang;
+    else{const w=wt(c);a=ang-span/2+span*(acc+w/2)/tot;acc+=w}
     const rad=a*Math.PI/180,d=nd.cd||DD[depth+1];
-    place(c,depth+1,x+Math.cos(rad)*d,y+Math.sin(rad)*d,a,depth===0?c.span:DEEP,depth===0?COLORS[c.name]:color,nd,path.concat(nd.name));
+    const cs=depth===0?c.span:((c.kids||[]).length>2?140:90);
+    place(c,depth+1,x+Math.cos(rad)*d,y+Math.sin(rad)*d,a,cs,depth===0?COLORS[c.name]:color,nd,path.concat(nd.name));
   });
 }
 place(TREE,0,0,0,0,0,COLORS.Beer,null,[]);
-for(let it=0;it<400;it++){
-  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
-    const a=nodes[i],b=nodes[j];let dx=b.x-a.x,dy=b.y-a.y;const d=Math.hypot(dx,dy)||1,m=a.r+b.r+10;
-    if(d<m){const p=(m-d)/d/4;dx*=p;dy*=p;if(!a.root){a.x-=dx;a.y-=dy}if(!b.root){b.x+=dx;b.y+=dy}}
+function relax(iters,pull,push,gap){
+  for(let it=0;it<iters;it++){
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i],b=nodes[j];let dx=b.x-a.x,dy=b.y-a.y;const d=Math.hypot(dx,dy)||1,m=a.r+b.r+gap;
+      if(d<m){const p=(m-d)/d*push;dx*=p;dy*=p;if(!a.root){a.x-=dx;a.y-=dy}if(!b.root){b.x+=dx;b.y+=dy}}
+    }
+    if(pull)nodes.forEach(q=>{if(!q.root){q.x+=(q.bx-q.x)*pull;q.y+=(q.by-q.y)*pull}});
   }
-  nodes.forEach(q=>{if(!q.root){q.x+=(q.bx-q.x)*.015;q.y+=(q.by-q.y)*.015}});
 }
+relax(300,.015,.25,12);
+relax(600,0,.5,14);
 
 /* ---------- STATE ---------- */
 const $=id=>document.getElementById(id);
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const SK="beerTree.ratings.v2",PK="beerTree.profile.v2";
-let S=load(SK,{});        // my ratings: { "IPA": 7 }
-let P=load(PK,null);      // { name, room }
-let F={name:"",d:{}};     // friend
+const SK="beerTree.ratings.v2",PK="beerTree.profile.v2",SYK="beerTree.synced.v2";
 const DB=CFG.DB_URL.replace(/\/$/,"");
+const leavesOf=q=>q.kids&&q.kids.length?q.kids.flatMap(leavesOf):[q];
+nodes.forEach(q=>{q.leaf=!(q.kids&&q.kids.length);q.L=leavesOf(q)});
+const rateable=nodes.filter(q=>q.leaf),leafNames=new Set(rateable.map(q=>q.name));
+const prune=o=>{const r={};for(const k in (o||{})){const v=+o[k];if(leafNames.has(k)&&v>=1&&v<=10)r[k]=Math.round(v)}return r};
+let S=prune(load(SK,{}));          // my ratings: only last-level beers
+let P=load(PK,null);               // { name, room }
+let F={name:"",d:{}};              // friend
+let synced=load(SYK,false),dirty=false,ver=0;
 const live=()=>!!(DB&&P&&P.name&&P.room);
-const rateable=nodes.filter(q=>!q.group);
-const collect=q=>q.group?(q.kids||[]).flatMap(collect):[q].concat((q.kids||[]).flatMap(collect));
-const RANKS=[[0,"Thirsty beginner"],[.1,"Curious sipper"],[.3,"Taproom regular"],[.55,"Hop head"],[.8,"Cicerone in training"],[1,"Beer master"]];
+const stat=(q,d)=>{let s=0,c=0;for(const l of q.L){const v=d[l.name]|0;if(v){s+=v;c++}}return{c,t:q.L.length,avg:c?s/c:0}};
+const fmt=v=>Number.isInteger(v)?String(v):v.toFixed(1);
 
 /* ---------- BUILD DOM ---------- */
 const world=$("world"),links=$("links"),stage=$("stage"),NS="http://www.w3.org/2000/svg";
 nodes.forEach(q=>{
-  if(q.parent){const l=document.createElementNS(NS,"line");l.style.stroke=q.c;links.appendChild(l);q.line=l}
+  if(q.parent){const l=document.createElementNS(NS,"line");l.style.stroke=q.c;l.style.color=q.c;links.appendChild(l);q.line=l}
   const el=document.createElement("div");
-  el.className="b";el.tabIndex=0;el.setAttribute("role","button");el.setAttribute("aria-label",q.name);
+  el.className="b"+(q.root?" root":"");el.tabIndex=0;el.setAttribute("role","button");el.setAttribute("aria-label",q.name);
   el.style.cssText=`--c:${q.c};width:${q.r*2}px;height:${q.r*2}px;font-size:${FONT[q.depth]}px;font-weight:${q.depth<2?600:500}`;
   el.innerHTML="<span></span><em></em>";el.firstChild.textContent=q.name;
   el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openNode(q)}};
@@ -307,10 +338,46 @@ stage.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")mouse={x:1e
 stage.addEventListener("wheel",e=>{e.preventDefault();zoom(Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015)),e.clientX,e.clientY)},{passive:false});
 $("zi").onclick=()=>zoom(1.3);$("zo").onclick=()=>zoom(1/1.3);$("zr").onclick=fit;
 
-/* ---------- BUBBLE MOTION (gentle) ---------- */
+/* ---------- BEER-THEMED BACKGROUND: foam on top, bubbles rising ---------- */
 const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const cv=$("bg"),cg=cv.getContext("2d"),FH=120;
+let foam=null,bub=[];
+const rnd=(s=>()=>(s=(s*16807)%2147483647)/2147483647)(11);
+const newBub=init=>({x:Math.random()*innerWidth,y:init?Math.random()*innerHeight:innerHeight+20,r:2+Math.random()*7,v:.15+Math.random()*.35,ph:Math.random()*6,a:.12+Math.random()*.2});
+function sizeBg(){
+  const d=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;
+  cv.width=w*d;cv.height=h*d;cg.setTransform(d,0,0,d,0,0);
+  foam=document.createElement("canvas");foam.width=w*d;foam.height=FH*d;
+  const f=foam.getContext("2d");f.scale(d,d);
+  const lq=f.createLinearGradient(0,0,0,FH);lq.addColorStop(0,"rgba(255,176,46,.45)");lq.addColorStop(1,"rgba(255,176,46,0)");
+  f.fillStyle=lq;f.fillRect(0,0,w,FH);
+  const blob=(x,y,r,al)=>{
+    const g=f.createRadialGradient(x-r*.3,y-r*.35,r*.1,x,y,r);
+    g.addColorStop(0,`rgba(255,252,240,${al})`);g.addColorStop(1,`rgba(238,218,165,${al})`);
+    f.fillStyle=g;f.beginPath();f.arc(x,y,r,0,7);f.fill();
+    f.strokeStyle=`rgba(255,255,255,${al*.5})`;f.lineWidth=1;f.stroke();
+  };
+  for(let x=-10;x<w+30;x+=24)blob(x+rnd()*14,34+rnd()*12,16+rnd()*12,.5);
+  for(let x=-10;x<w+30;x+=26)blob(x+rnd()*16,14+rnd()*10,18+rnd()*13,.88);
+  for(let i=0;i<w/18;i++)blob(rnd()*w,38+rnd()*32,2+rnd()*6,.75);
+  bub=Array.from({length:Math.round(w*h/16000)},()=>newBub(true));
+}
+function drawBg(t){
+  const w=innerWidth,h=innerHeight;cg.clearRect(0,0,w,h);
+  for(const b of bub){
+    if(!calm){b.y-=b.v;b.x+=Math.sin(b.y*.02+b.ph)*.25;if(b.y<-12)Object.assign(b,newBub(false))}
+    cg.beginPath();cg.arc(b.x,b.y,b.r,0,7);cg.fillStyle=`rgba(255,236,190,${b.a*.3})`;cg.fill();
+    cg.strokeStyle=`rgba(255,240,205,${b.a})`;cg.lineWidth=1;cg.stroke();
+    cg.beginPath();cg.arc(b.x-b.r*.35,b.y-b.r*.35,b.r*.22,0,7);cg.fillStyle=`rgba(255,255,255,${b.a*1.6})`;cg.fill();
+  }
+  cg.drawImage(foam,0,calm?0:Math.sin(t/2600)*2-2,w,FH);
+}
+addEventListener("resize",sizeBg);
+
+/* ---------- BUBBLE MOTION (gentle) ---------- */
 function tick(t){
   if(view.dirty){world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.k})`;view.dirty=false}
+  drawBg(t);
   for(const q of nodes){
     let tx=calm?0:Math.sin(t/1600+q.ph)*2.5,ty=calm?0:Math.cos(t/1900+q.ph)*2.5;
     const dx=q.x-mouse.x,dy=q.y-mouse.y,d=Math.hypot(dx,dy),reach=q.r*1.9;
@@ -334,7 +401,11 @@ const card=$("card"),scrim=$("scrim"),stars=$("stars");
 let sel=null,hideT=null;
 for(let i=1;i<=10;i++){
   const b=document.createElement("button");b.textContent="★";b.setAttribute("aria-label",i+" out of 10");
-  b.onclick=()=>{if(!sel)return;if(S[sel.name]===i)delete S[sel.name];else S[sel.name]=i;store(SK,S);queuePush();refresh()};
+  b.onclick=()=>{
+    if(!sel||!sel.leaf)return;
+    if(S[sel.name]===i)delete S[sel.name];else S[sel.name]=i;
+    store(SK,S);queuePush();refresh();
+  };
   stars.appendChild(b);
 }
 function openNode(q){
@@ -343,7 +414,7 @@ function openNode(q){
   card.style.cssText=`--c:${q.c};left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;border-radius:50%`;
   card.classList.remove("open");card.classList.add("show");
   $("pp").textContent=q.path.join(" › ");$("pn").textContent=q.name;$("pd").textContent=q.desc;
-  $("rate").hidden=!!q.group;$("gp").hidden=!q.group;
+  $("info").hidden=!!q.group;
   if(!q.group){
     $("abv").textContent=q.abv;$("ex").textContent=q.ex;
     $("crit").innerHTML=q.crit.map((v,i)=>`<div class="cr"><span>${CL[i]}</span><div>${[1,2,3,4,5].map(m=>`<i class="${m<=v?"f":""}"></i>`).join("")}</div></div>`).join("");
@@ -351,7 +422,7 @@ function openNode(q){
   $("cin").scrollTop=0;refresh();
   q.el.style.visibility="hidden";
   void card.offsetWidth;
-  const W=Math.min(innerWidth-24,440),H=Math.min(innerHeight-24,q.group?460:700);
+  const W=Math.min(innerWidth-24,440),H=Math.min(innerHeight-24,q.group?520:720);
   Object.assign(card.style,{left:(innerWidth-W)/2+"px",top:(innerHeight-H)/2+"px",width:W+"px",height:H+"px",borderRadius:"34px"});
   card.classList.add("open");scrim.classList.add("on");
 }
@@ -367,44 +438,50 @@ addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("join").hidden)$("join
 
 /* ---------- REFRESH UI ---------- */
 function refresh(){
-  const total=rateable.length,fd=F.d||{};
-  let mine=0,sum=0,theirs=0;
-  rateable.forEach(q=>{
-    const a=S[q.name]|0,b=fd[q.name]|0;
-    q.el.classList.toggle("tried",a>0);
-    q.em.innerHTML=(a?`<b>${a}/10</b>`:"")+(b?`<u>${esc(F.name)} ${b}/10</u>`:"");
-    if(a){mine++;sum+=a}if(b)theirs++;
+  const fd=F.d||{};
+  nodes.forEach(q=>{
+    const m=stat(q,S);
+    q.el.classList.toggle("tried",m.c===m.t);
+    // only MY rating is shown outside the bubble
+    q.em.innerHTML=m.c?`<b>${fmt(m.avg)}/10</b>`+(q.leaf?"":`<s>${m.c}/${m.t}</s>`):"";
   });
-  $("f1").style.width=mine/total*100+"%";$("c1").textContent=mine+"/"+total;
-  $("w2").hidden=!F.name;
-  if(F.name){$("n2").textContent=F.name;$("f2").style.width=theirs/total*100+"%";$("c2").textContent=theirs+"/"+total}
-  const rank=RANKS.filter(r=>mine/total>=r[0]).pop()[1];
-  $("stat").textContent=rank+(mine?" · avg "+(sum/mine).toFixed(1)+"/10":"");
   if(!sel)return;
-  if(sel.group){
-    const L=collect(sel).filter(q=>!q.group),a=L.filter(q=>S[q.name]>0).length,b=L.filter(q=>fd[q.name]>0).length;
-    $("gp").innerHTML=`You have tried <b>${a}</b> of ${L.length} beers here.`+(F.name?`<br>${esc(F.name)} has tried <b>${b}</b> of ${L.length}.`:"");
-  }else{
-    const a=S[sel.name]|0,b=fd[sel.name]|0;
-    [...stars.children].forEach((s,i)=>s.classList.toggle("on",i<a));
-    $("myv").textContent=a?a+"/10":"not tried yet";
-    $("fr").textContent=F.name?(b?`${F.name}'s rating: ${b}/10`:`${F.name} has not rated this yet`):(live()?"Waiting for your friend to join the room":"Friend sync is off");
-  }
+  const m=stat(sel,S),f=stat(sel,fd);
+  $("stars").hidden=!sel.leaf;$("note").hidden=sel.leaf;
+  $("myh").textContent=sel.leaf?"Your rating":"Your average";
+  $("myv").textContent=m.c?fmt(m.avg)+"/10":(sel.leaf?"not tried yet":"–");
+  if(sel.leaf)[...stars.children].forEach((s,i)=>s.classList.toggle("on",i<(S[sel.name]|0)));
+  else $("note").textContent=m.c?`Calculated from the ${m.c} of ${m.t} beers you have rated in this branch.`:`Not rated yet. Rate the individual beers in this branch (${m.t}) and the average appears here.`;
+  $("fr").textContent=!F.name?(live()?"Waiting for your friend to join the room":"Friend sync is off")
+    :sel.leaf?(f.c?`${F.name}'s rating: ${fmt(f.avg)}/10`:`${F.name} has not rated this yet`)
+    :(f.c?`${F.name}'s average: ${fmt(f.avg)}/10 (${f.c} of ${f.t} rated)`:`${F.name} has not rated anything here yet`);
 }
 
-/* ---------- SYNC WITH FRIEND (Firebase Realtime Database REST) ---------- */
+/* ---------- SYNC (Firebase Realtime Database REST) ---------- */
 const enc=encodeURIComponent,safe=s=>s.trim().replace(/[.#$\[\]\/]/g,"").slice(0,24);
-let pt;const queuePush=()=>{clearTimeout(pt);pt=setTimeout(push,500)};
+let pt;
+const queuePush=()=>{dirty=true;ver++;clearTimeout(pt);pt=setTimeout(push,500)};
 async function push(){
-  if(!live())return;
-  try{await fetch(`${DB}/rooms/${enc(P.room)}/${enc(P.name)}.json`,{method:"PUT",body:JSON.stringify(S)})}catch(e){}
+  if(!live())return;const v=ver;
+  try{
+    const r=await fetch(`${DB}/rooms/${enc(P.room)}/${enc(P.name)}.json`,{method:"PUT",body:JSON.stringify(S)});
+    if(r.ok){if(v===ver)dirty=false;synced=true;store(SYK,true)}
+  }catch(e){}
 }
 async function pull(){
   if(!live())return;
   try{
     const all=(await (await fetch(`${DB}/rooms/${enc(P.room)}.json`)).json())||{};
+    if(!dirty){
+      const mine=all[P.name];
+      if(mine){S=prune(mine);store(SK,S)}                 // load my saved progress (any device)
+      else if(synced){S={};store(SK,S)}                    // it was cleared elsewhere
+      else if(Object.keys(S).length)await push();          // first upload of local ratings
+      synced=true;store(SYK,true);
+    }
     const o=Object.keys(all).find(k=>k!==P.name);
-    F=o?{name:o,d:all[o]||{}}:{name:"",d:{}};refresh();
+    F=o?{name:o,d:prune(all[o])}:{name:"",d:{}};
+    refresh();
   }catch(e){}
 }
 setInterval(pull,12000);
@@ -419,11 +496,12 @@ $("jf").onsubmit=e=>{
   const name=safe($("jn").value),room=safe($("jr").value).toLowerCase();
   if(!name){$("jn").focus();return}
   if(DB&&!room){$("jr").focus();return}
-  P={name,room};store(PK,P);F={name:"",d:{}};jo.hidden=true;refresh();push().then(pull);
+  if(DB&&(!P||P.name!==name||P.room!==room)){S={};store(SK,S);synced=false;store(SYK,false)}  // different user: start from their cloud progress
+  P={name,room};store(PK,P);F={name:"",d:{}};jo.hidden=true;refresh();pull();
 };
-$("clr").onclick=()=>{if(confirm("Clear all your ratings?")){S={};store(SK,S);push();refresh();jo.hidden=true}};
+$("clr").onclick=()=>{if(confirm("Clear all your ratings?")){S={};store(SK,S);queuePush();refresh();jo.hidden=true}};
 
-fit();refresh();requestAnimationFrame(tick);
+sizeBg();fit();refresh();requestAnimationFrame(tick);
 if(DB&&!P)showJoin();else pull();
 </script>
 </body>
